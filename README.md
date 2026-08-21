@@ -55,6 +55,12 @@ Opção A — Docker:
 cd db/dev
 docker compose up -d
 ```
+ou 
+
+```bash
+Para rodar diretamente na raiz do diretório(Melhor dessa forma)
+docker compose -f db/dev/docker-compose.yml up -d
+```
 
 Opção B — qualquer Postgres local vazio (ex.: binários portáteis) na porta 5433:
 
