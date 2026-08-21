@@ -1,0 +1,17 @@
+# Postgres LOCAL de desenvolvimento — só para rodar o dashboard sem acesso ao
+# banco central. Sobe com o schema real (01_schema.sql, cópia do repo principal)
+# e dados sintéticos (02_seed_dev.sql). NUNCA aponte isso para produção.
+#
+#   docker compose up -d          (porta 5433 para não colidir com um Postgres local)
+services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_DB: desafio_madeira
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev
+    volumes:
+      - ./01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./02_seed_dev.sql:/docker-entrypoint-initdb.d/02_seed_dev.sql:ro
