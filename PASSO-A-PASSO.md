@@ -33,22 +33,23 @@ npm install
 
 Aguarde terminar (cria a pasta `node_modules`).
 
-## 4. Configurar a conexão com o banco
+## 4. Conferir o arquivo .env (já vem pronto)
 
-1. Copie o arquivo `.env.example` e renomeie a cópia para `.env`
-   (no terminal: `copy .env.example .env` no Windows, `cp .env.example .env` no Mac/Linux).
-2. Edite o `.env` com os dados do PostgreSQL central:
+O zip **já inclui um `.env` configurado** para o banco de teste do Docker
+(passo 6) e com o login do dashboard:
 
-```
-PG_HOST=ip-ou-host-do-postgres
-PG_PORT=5432
-PG_USER=postgres
-PG_PASSWORD=sua-senha
-PG_DBNAME=desafio_madeira
-```
+- Banco: `localhost`, porta `5433`, senha `dev` (o Postgres do docker-compose)
+- Login da interface: usuário `admin`, senha `root`
 
-> **Não tem acesso ao banco central?** Use o banco local de teste do passo 6
-> e aponte o `.env` para ele (`PG_HOST=localhost`, `PG_PORT=5433`).
+Você só precisa editá-lo em dois casos:
+
+1. **Trocar a senha de login**: mude `DASHBOARD_PASSWORD` (e reinicie o servidor).
+2. **Apontar para o banco central real**: troque as linhas `PG_*`
+   (host/IP real, porta `5432`, senha real; `PG_SSL=true` se exigir TLS).
+
+> Importante: quem vale é o **`.env`** — o `.env.example` é só um modelo
+> documentando as variáveis, o servidor não lê ele. E toda mudança no `.env`
+> exige reiniciar o servidor (`Ctrl+C` e `npm run dev` de novo).
 
 ## 5. Executar
 
@@ -60,6 +61,8 @@ Isso sobe **dois processos juntos**:
 
 - `server` — a API de leitura em http://localhost:3001
 - `client` — a interface em **http://localhost:5173** ← abra este no navegador
+
+Entre com o usuário e a senha definidos em `DASHBOARD_USER`/`DASHBOARD_PASSWORD`.
 
 Alterações no código recarregam sozinhas (hot reload). Para parar: `Ctrl+C`
 no terminal.
