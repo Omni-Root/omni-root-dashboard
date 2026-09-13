@@ -24,8 +24,15 @@
   --seq-7: #0d366b;
 }
 
+/* ---- tema escuro ----
+   Três estados, controlados pelo botão de tema (ThemeToggle):
+     - "Sistema" (sem data-theme): segue o prefers-color-scheme do SO;
+     - "Claro"  (data-theme="light"): força claro mesmo com o SO no escuro;
+     - "Escuro" (data-theme="dark"): força escuro em qualquer caso.
+   Os mesmos tokens aparecem nos dois blocos de propósito: o primeiro cobre o
+   modo automático, o segundo a escolha manual. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     color-scheme: dark;
     --page: #0d0d0d;
     --surface: #1a1a19;
@@ -36,6 +43,24 @@
     --axis: #383835;
     --border: rgba(255, 255, 255, 0.1);
   }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.1);
+}
+
+/* "Claro" explícito: reafirma o color-scheme para o navegador não pintar
+   controles nativos (inputs de data, scrollbars) no esquema do sistema. */
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 * {
@@ -60,8 +85,9 @@ body {
 .header {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px 16px;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px 16px;
   margin-bottom: 16px;
 }
 
@@ -72,6 +98,144 @@ body {
 
 .header .subtitle {
   color: var(--text-secondary);
+  display: block;
+  margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- botões genéricos ---- */
+.btn {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--grid);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.export-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.export-error {
+  color: var(--status-critical);
+  font-size: 12px;
+}
+
+.user-chip {
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+/* ---- botão de tema (claro / escuro / sistema) ---- */
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---- tela de login ---- */
+.login-screen {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-theme {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 24px;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.login-sub {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.login-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.login-card input {
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--page);
+  border: 1px solid var(--axis);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.login-card button {
+  margin-top: 6px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--seq-5);
+  border: 1px solid var(--seq-6);
+  border-radius: 8px;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+
+.login-card button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.login-error {
+  background: color-mix(in srgb, var(--status-critical) 12%, transparent);
+  border: 1px solid var(--status-critical);
+  color: var(--status-critical);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
 }
 
 /* ---- filtros (uma linha acima dos gráficos) ---- */

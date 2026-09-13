@@ -28,10 +28,26 @@ function readTokens(): ThemeTokens {
 export function useThemeTokens(): ThemeTokens {
   const [tokens, setTokens] = useState<ThemeTokens>(readTokens);
   useEffect(() => {
+    const reler = () => setTokens(readTokens());
+
+    // 1) Preferência do SISTEMA muda (vale quando o tema está em "Sistema").
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = () => setTokens(readTokens());
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
+    mq.addEventListener('change', reler);
+
+    // 2) Troca MANUAL pelo botão de tema: o ThemeToggle escreve data-theme no
+    //    <html>, então observamos esse atributo. Sem isto, as cores dos
+    //    gráficos (que o Recharts recebe como atributo SVG, onde var(--x) não
+    //    resolve) ficariam congeladas no tema anterior.
+    const observador = new MutationObserver(reler);
+    observador.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    return () => {
+      mq.removeEventListener('change', reler);
+      observador.disconnect();
+    };
   }, []);
   return tokens;
 }

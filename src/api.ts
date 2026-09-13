@@ -1,14 +1,26 @@
 import type { Bucket, Filters, HeatmapCell, Maquina, SummaryRow, TimeseriesPoint } from './types';
 
+// Erro específico para 401: deixa o App voltar para a tela de login quando a
+// sessão expira no meio do uso.
+export class UnauthorizedError extends Error {
+  constructor() {
+    super('Sessão expirada');
+    this.name = 'UnauthorizedError';
+  }
+}
+
+function qsFrom(params: Record<string, string>): string {
+  return new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '')).toString();
+}
+
 async function fetchJson<T>(
   path: string,
   params: Record<string, string>,
   signal?: AbortSignal,
 ): Promise<T> {
-  const qs = new URLSearchParams(
-    Object.entries(params).filter(([, v]) => v !== ''),
-  ).toString();
+  const qs = qsFrom(params);
   const res = await fetch(qs ? `${path}?${qs}` : path, { signal });
+  if (res.status === 401) throw new UnauthorizedError();
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: string } | null;
     throw new Error(body?.error ?? `Falha na requisição (${res.status})`);
@@ -16,11 +28,63 @@ async function fetchJson<T>(
   return res.json() as Promise<T>;
 }
 
+// Dispara o download de um arquivo servido por uma rota GET (usa o cookie de
+// sessão automaticamente por ser same-origin).
+async function download(path: string, params: Record<string, string>): Promise<void> {
+  const qs = qsFrom(params);
+  const res = await fetch(qs ? `${path}?${qs}` : path);
+  if (res.status === 401) throw new UnauthorizedError();
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `Falha na exportação (${res.status})`);
+  }
+  const blob = await res.blob();
+  const cd = res.headers.get('Content-Disposition') ?? '';
+  const match = /filename="?([^"]+)"?/.exec(cd);
+  const name = match?.[1] ?? 'download';
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function filterParams(f: Filters): Record<string, string> {
   return { from: f.from, to: f.to, maquinaId: f.maquinaId };
 }
 
+export interface MeResponse {
+  authenticated: boolean;
+  user?: string;
+}
+
 export const api = {
+  // ---- sessão ----
+  me: async (): Promise<MeResponse> => {
+    const res = await fetch('/api/me');
+    if (!res.ok) return { authenticated: false };
+    return res.json() as Promise<MeResponse>;
+  },
+  login: async (username: string, password: string): Promise<{ user: string }> => {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(body?.error ?? `Falha no login (${res.status})`);
+    }
+    return res.json() as Promise<{ user: string }>;
+  },
+  logout: async (): Promise<void> => {
+    await fetch('/api/logout', { method: 'POST' });
+  },
+
+  // ---- dados ----
   maquinas: (signal?: AbortSignal) => fetchJson<Maquina[]>('/api/maquinas', {}, signal),
   summary: (f: Filters, signal?: AbortSignal) =>
     fetchJson<SummaryRow[]>('/api/summary', filterParams(f), signal),
@@ -32,4 +96,9 @@ export const api = {
       { ...filterParams(f), statuses: statuses.join(',') },
       signal,
     ),
+
+  // ---- exportações ----
+  exportCsv: (f: Filters) => download('/api/export/csv', filterParams(f)),
+  exportPdf: (f: Filters) => download('/api/export/pdf', filterParams(f)),
+  exportStanford: (f: Filters) => download('/api/export/stanford', filterParams(f)),
 };
