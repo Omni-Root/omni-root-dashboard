@@ -150,6 +150,67 @@ body {
   border-radius: 999px;
 }
 
+/* ---- chip "Ao vivo" (atualização em tempo real) ---- */
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+
+.live-ao-vivo .live-dot {
+  background: var(--status-good);
+  box-shadow: 0 0 0 0 var(--status-good);
+  animation: live-pulse 2s ease-out infinite;
+}
+
+.live-reconectando .live-dot {
+  background: var(--status-warning);
+}
+
+.live-label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.live-count {
+  background: var(--status-good);
+  color: #fff;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-good) 60%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-ao-vivo .live-dot {
+    animation: none;
+  }
+}
+
 /* ---- botão de tema (claro / escuro / sistema) ---- */
 .theme-btn {
   display: inline-flex;

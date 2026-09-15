@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api, UnauthorizedError } from './api';
+import LiveBadge from './components/LiveBadge';
+import { useLive } from './useLive';
 import FiltersBar from './components/Filters';
 import Heatmap from './components/Heatmap';
 import Login from './components/Login';
@@ -78,6 +80,10 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
   const [timeseries, setTimeseries] = useState<TimeseriesPoint[] | null>(null);
   const [heatmap, setHeatmap] = useState<HeatmapCell[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Incrementado a cada aviso de tora nova (SSE): força o efeito de carga a
+  // rodar de novo com os mesmos filtros, sem F5.
+  const [versao, setVersao] = useState(0);
+  const live = useLive(useCallback(() => setVersao((v) => v + 1), []));
 
   async function logout() {
     await api.logout().catch(() => {
@@ -100,7 +106,9 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
 
   useEffect(() => {
     const ac = new AbortController();
-    setError(null);
+    // Só mostra "Carregando…" na primeira vez; nas atualizações ao vivo os
+    // painéis trocam de valor sem piscar.
+    if (versao === 0) setError(null);
     Promise.all([
       api.summary(filters, ac.signal),
       api.timeseries(filters, bucket, ac.signal),
@@ -110,6 +118,7 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
         setSummary(s);
         setTimeseries(t);
         setHeatmap(h);
+        setError(null);
       })
       .catch((err: unknown) => {
         if (ac.signal.aborted) return;
@@ -120,7 +129,7 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
         setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
       });
     return () => ac.abort();
-  }, [filters, bucket, heatStatuses, onLogout]);
+  }, [filters, bucket, heatStatuses, onLogout, versao]);
 
   const loading = summary === null && !error;
 
@@ -134,6 +143,7 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
           </span>
         </div>
         <div className="header-actions">
+          <LiveBadge info={live} />
           <ExportMenu filters={filters} onUnauthorized={onLogout} />
           <ThemeToggle />
           <span className="user-chip" title="Usuário autenticado">

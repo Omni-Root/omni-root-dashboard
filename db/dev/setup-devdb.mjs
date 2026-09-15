@@ -44,6 +44,9 @@ if (already.rowCount === 0) {
 } else {
   console.log('schema já aplicado — nada a fazer');
 }
+// Trigger de NOTIFY (tempo real no dashboard) — idempotente, sempre aplica.
+await db.query(readFileSync(join(base, '03_notify.sql'), 'utf8'));
+console.log('trigger de tempo real aplicado');
 const counts = await db.query(
   'SELECT status_classificacao, COUNT(*)::int AS n FROM toras_inspecionadas GROUP BY 1 ORDER BY 1',
 );

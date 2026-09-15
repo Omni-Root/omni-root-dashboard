@@ -16,6 +16,7 @@ import {
 import { streamCsv } from './export-csv.js';
 import { streamPdf } from './export-pdf.js';
 import { streamStanford } from './export-stanford.js';
+import { iniciarTempoReal, rotaEventos } from './live.js';
 
 const app = express();
 const port = Number(process.env.API_PORT ?? 3001);
@@ -109,6 +110,9 @@ app.get('/api/heatmap', requireAuth, route((req) =>
   getHeatmap(filtersFrom(req), parseStatuses(req.query.statuses)),
 ));
 
+// ---- Tempo real (exige sessão): SSE com avisos de tora nova ----
+app.get('/api/events', requireAuth, rotaEventos);
+
 // ---- Exportações (exigem sessão) ----
 app.get('/api/export/csv', requireAuth, exportRoute(streamCsv));
 app.get('/api/export/pdf', requireAuth, exportRoute(streamPdf));
@@ -125,4 +129,5 @@ app.get(/^\/(?!api\/).*/, (_req, res) => {
 
 app.listen(port, () => {
   console.log(`API de leitura em http://localhost:${port}`);
+  void iniciarTempoReal();
 });

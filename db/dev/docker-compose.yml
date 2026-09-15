@@ -15,3 +15,4 @@ services:
     volumes:
       - ./01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
       - ./02_seed_dev.sql:/docker-entrypoint-initdb.d/02_seed_dev.sql:ro
+      - ./03_notify.sql:/docker-entrypoint-initdb.d/03_notify.sql:ro
