@@ -1,4 +1,13 @@
-import type { Bucket, Filters, HeatmapCell, Maquina, SummaryRow, TimeseriesPoint } from './types';
+import type {
+  Bucket,
+  Filters,
+  HeatmapCell,
+  Maquina,
+  Qualidade,
+  SummaryRow,
+  TimeseriesPoint,
+  UltimaInspecao,
+} from './types';
 
 // Erro específico para 401: deixa o App voltar para a tela de login quando a
 // sessão expira no meio do uso.
@@ -96,6 +105,12 @@ export const api = {
       { ...filterParams(f), statuses: statuses.join(',') },
       signal,
     ),
+
+  // ---- indicadores de qualidade ----
+  ultima: (f: Filters, signal?: AbortSignal) =>
+    fetchJson<UltimaInspecao | null>('/api/ultima', { maquinaId: f.maquinaId }, signal),
+  qualidade: (f: Filters, signal?: AbortSignal) =>
+    fetchJson<Qualidade>('/api/qualidade', filterParams(f), signal),
 
   // ---- exportações ----
   exportCsv: (f: Filters) => download('/api/export/csv', filterParams(f)),

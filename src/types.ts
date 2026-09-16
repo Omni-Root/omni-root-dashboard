@@ -41,3 +41,81 @@ export const STATUS_META: Record<Status, { label: string; cssVar: string }> = {
 };
 
 export const STATUS_ORDER: Status[] = ['aprovado', 'quarentena', 'reprovado'];
+
+// ---- Indicadores de qualidade (o que o desafio pede) ----
+export type TipoDado = 'laboratorio' | 'literatura' | 'referencia_generica' | null;
+
+export interface DensidadeInfo {
+  valor: number | null;
+  clone: string | null;
+  tipo_dado: TipoDado;
+  min: number | null;
+  max: number | null;
+  fonte: string | null;
+}
+
+export interface UltimaInspecao {
+  id: number;
+  data: string;
+  status: Status;
+  confianca: number;
+  log_id: string;
+  maquina_modelo: string | null;
+  maquina_serie: string | null;
+  talhao_nome: string | null;
+  vista: 'secao' | 'lateral' | 'desconhecida';
+  diametro_cm: number | null;
+  comprimento_cm: number | null;
+  comprimento_medido: boolean;
+  tortuosidade: number | null;
+  casca_pct: number | null;
+  volume_m3: number | null;
+  massa_kg: number | null;
+  massa_min_kg: number | null;
+  massa_max_kg: number | null;
+  densidade: DensidadeInfo;
+  saude_pct: number | null;
+  defeitos: number;
+  defeitos_tipos: string[];
+}
+
+export interface QualidadeTalhao {
+  talhao: string | null;
+  clone: string | null;
+  tipo_dado: TipoDado;
+  densidade: number | null;
+  densidade_min: number | null;
+  densidade_max: number | null;
+  toras: number;
+  falhas: number;
+  casca_media: number | null;
+  tort_media: number | null;
+  tort_n: number;
+  diam_medio: number | null;
+  volume_m3: number | null;
+  massa_kg: number | null;
+  massa_min_kg: number | null;
+  massa_max_kg: number | null;
+}
+
+export interface Faixa {
+  faixa: string;
+  total: number;
+}
+
+export interface Qualidade {
+  porTalhao: QualidadeTalhao[];
+  tortuosidade: Faixa[];
+  casca: Faixa[];
+}
+
+// Rótulo da proveniência da densidade — a "base científica" virando pixel:
+// o gestor vê de onde o número veio, não só o número.
+export const TIPO_DADO_META: Record<Exclude<TipoDado, null>, { label: string; hint: string }> = {
+  laboratorio: { label: 'Laboratório', hint: 'Laudo de densidade básica do próprio clone' },
+  literatura: { label: 'Literatura', hint: 'Valor publicado para este clone específico' },
+  referencia_generica: {
+    label: 'Referência genérica',
+    hint: 'Média do híbrido E. grandis × urophylla; aguardando laudo do clone',
+  },
+};

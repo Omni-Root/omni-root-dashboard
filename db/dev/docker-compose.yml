@@ -16,3 +16,5 @@ services:
       - ./01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
       - ./02_seed_dev.sql:/docker-entrypoint-initdb.d/02_seed_dev.sql:ro
       - ./03_notify.sql:/docker-entrypoint-initdb.d/03_notify.sql:ro
+      - ./04_clones_densidade.sql:/docker-entrypoint-initdb.d/04_clones_densidade.sql:ro
+      - ./05_seed_indicadores_dev.sql:/docker-entrypoint-initdb.d/05_seed_indicadores_dev.sql:ro

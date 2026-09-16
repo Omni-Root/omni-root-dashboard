@@ -17,6 +17,7 @@ import { streamCsv } from './export-csv.js';
 import { streamPdf } from './export-pdf.js';
 import { streamStanford } from './export-stanford.js';
 import { iniciarTempoReal, rotaEventos } from './live.js';
+import { getQualidade, getUltimaInspecao } from './qualidade.js';
 
 const app = express();
 const port = Number(process.env.API_PORT ?? 3001);
@@ -109,6 +110,11 @@ app.get('/api/timeseries', requireAuth, route((req) =>
 app.get('/api/heatmap', requireAuth, route((req) =>
   getHeatmap(filtersFrom(req), parseStatuses(req.query.statuses)),
 ));
+
+// ---- Indicadores de qualidade (exigem sessão) ----
+// Última inspeção: só filtro de máquina (é o cartão ao vivo, independe do período).
+app.get('/api/ultima', requireAuth, route((req) => getUltimaInspecao(parseMaquinaId(req.query.maquinaId))));
+app.get('/api/qualidade', requireAuth, route((req) => getQualidade(filtersFrom(req))));
 
 // ---- Tempo real (exige sessão): SSE com avisos de tora nova ----
 app.get('/api/events', requireAuth, rotaEventos);

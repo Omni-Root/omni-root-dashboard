@@ -60,10 +60,20 @@ Todos os painéis respeitam os filtros do topo (**período** e **máquina**):
 
 | Painel | O que responde |
 |---|---|
+| **Última inspeção recebida do campo** | A tora mais recente, com os indicadores que o desafio pede: diâmetro, comprimento, casca residual, tortuosidade, densidade básica (com a **proveniência**: laboratório / literatura / referência genérica), massa seca (com faixa mín.–máx. quando o clone tem faixa cadastrada) e defeitos. **Atualiza sozinho** quando a máquina sincroniza (SSE) e pisca uma vez ao chegar tora nova. Medido (borda sólida) e estimado (borda tracejada) ficam explícitos. Ignora o período: é sempre a última; respeita só o filtro de máquina. |
 | **Cartões de resumo** | Quantas peças foram inspecionadas e a divisão entre Aprovada / Contenção / Rejeitada, com percentual |
+| **Qualidade por talhão e clone** | Casca média, tortuosidade média (só toras vistas de lado), diâmetro médio, volume e **massa seca prevista** — com a densidade de referência, sua proveniência e a faixa de incerteza herdada da densidade mín./máx. do clone. É a "previsibilidade para a fábrica" do enunciado em números |
+| **Distribuição de tortuosidade / casca residual** | Histogramas por faixa (tortuosidade: reta < 2%, leve 2–5%, visível 5–10%, torta ≥ 10%; casca: ≤ 5%, 5–15%, 15–30%, > 30%) |
 | **Eventos ao longo do tempo** | Como o volume e a qualidade evoluem (granularidade por hora, dia ou semana) |
 | **Proporção por classificação** | Participação de cada resultado no período (rosca) |
 | **Mapa de calor de falhas** | Concentração de falhas por **dia da semana × hora do dia** — revela padrão operacional (turno, fadiga, troca de talhão) |
+
+Os indicadores vêm de `indicadores_qualidade` (8 linhas por tora, gravadas pelo
+`main.py` do repositório principal). O clone de cada tora sai do
+`metodo_medicao` da densidade (`lookup_clone_<ID>`), e a proveniência/faixa da
+densidade da tabela `clones_densidade` (migration do repo principal). Se essa
+tabela não existir no banco, os painéis continuam funcionando — só sem
+proveniência e sem faixa.
 
 Os status do banco (`aprovado` / `quarentena` / `reprovado`) aparecem na
 interface como **Aprovada / Contenção / Rejeitada**. "Falha" é, por padrão,
@@ -231,10 +241,12 @@ node db/dev/setup-devdb.mjs 5433
 
 No `.env`, use `PG_PORT=5433` e senha `dev` (Docker) ou vazia (opção B).
 
-> ⚠️ O seed de desenvolvimento popula apenas `toras_inspecionadas` (mais
-> máquinas e talhões). Ele **não** popula `indicadores_qualidade` nem
-> `defeitos_detectados`, então o Export StanForD gerado contra este banco sai
-> com os `<Stem>` sem as tabelas de indicadores/defeitos. Para ver o formato
+> ℹ️ O seed popula `toras_inspecionadas` (mais máquinas e talhões),
+> `clones_densidade` (`04_clones_densidade.sql`, cópia da migration do repo
+> principal) e **indicadores de qualidade sintéticos** para todas as toras
+> (`05_seed_indicadores_dev.sql`: ~60% vistas de lado, casca maior no Talhão
+> Norte, dois clones — um com faixa de densidade). `defeitos_detectados` fica
+> vazio, então o Export StanForD sai sem a tabela de defeitos. Para o formato
 > completo, aponte para o banco central com dados reais do pipeline.
 
 ---
@@ -251,6 +263,8 @@ No `.env`, use `PG_PORT=5433` e senha `dev` (Docker) ou vazia (opção B).
 | `GET /api/summary` | exige | `from`, `to`, `maquinaId?` | Contagem por classificação |
 | `GET /api/timeseries` | exige | + `bucket` (`hour`/`day`/`week`) | Série temporal por classificação |
 | `GET /api/heatmap` | exige | + `statuses` (ex.: `reprovado,quarentena`) | Contagem por dia da semana × hora |
+| `GET /api/ultima` | exige | `maquinaId?` | Última tora recebida, com os 8 indicadores, proveniência da densidade e faixa de massa |
+| `GET /api/qualidade` | exige | `from`, `to`, `maquinaId?` | Qualidade por talhão/clone + histogramas de tortuosidade e casca |
 | `GET /api/export/csv` | exige | `from`, `to`, `maquinaId?` | Inspeções em CSV (streaming) |
 | `GET /api/export/pdf` | exige | `from`, `to`, `maquinaId?` | Relatório-sumário em PDF |
 | `GET /api/export/stanford` | exige | `from`, `to`, `maquinaId?` | ZIP com `.hpr` StanForD 2010 |
@@ -269,6 +283,7 @@ server/
   index.ts            # Rotas, middleware de sessão e wiring geral
   db.ts               # Pool do PostgreSQL (read-only por configuração)
   queries.ts          # Todo o SQL: painéis + exportações
+  qualidade.ts        # SQL dos indicadores de qualidade (última inspeção, por talhão, histogramas)
   validate.ts         # Validação dos parâmetros de query string
   auth.ts             # Credenciais + cookie de sessão assinado (HMAC)
   labels.ts           # Rótulos de status e formatação de data
@@ -285,6 +300,7 @@ src/
     Login.tsx           ThemeToggle.tsx    ExportMenu.tsx
     Filters.tsx         SummaryCards.tsx   TimeSeriesChart.tsx
     ProportionDonut.tsx Heatmap.tsx        useThemeTokens.ts
+    UltimaInspecao.tsx  QualidadeTalhao.tsx Histograma.tsx
 db/dev/               # PostgreSQL de desenvolvimento (schema + seed sintético)
 ```
 

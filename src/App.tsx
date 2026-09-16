@@ -4,6 +4,9 @@ import LiveBadge from './components/LiveBadge';
 import { useLive } from './useLive';
 import FiltersBar from './components/Filters';
 import Heatmap from './components/Heatmap';
+import Histograma from './components/Histograma';
+import QualidadeTalhao from './components/QualidadeTalhao';
+import UltimaInspecao from './components/UltimaInspecao';
 import Login from './components/Login';
 import ExportMenu from './components/ExportMenu';
 import ThemeToggle from './components/ThemeToggle';
@@ -15,9 +18,11 @@ import type {
   Filters,
   HeatmapCell,
   Maquina,
+  Qualidade,
   Status,
   SummaryRow,
   TimeseriesPoint,
+  UltimaInspecao as Ultima,
 } from './types';
 
 function isoDaysAgo(days: number): string {
@@ -79,6 +84,8 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
   const [summary, setSummary] = useState<SummaryRow[] | null>(null);
   const [timeseries, setTimeseries] = useState<TimeseriesPoint[] | null>(null);
   const [heatmap, setHeatmap] = useState<HeatmapCell[] | null>(null);
+  const [ultima, setUltima] = useState<Ultima | null>(null);
+  const [qualidade, setQualidade] = useState<Qualidade | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Incrementado a cada aviso de tora nova (SSE): força o efeito de carga a
   // rodar de novo com os mesmos filtros, sem F5.
@@ -113,11 +120,15 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
       api.summary(filters, ac.signal),
       api.timeseries(filters, bucket, ac.signal),
       api.heatmap(filters, heatStatuses, ac.signal),
+      api.ultima(filters, ac.signal),
+      api.qualidade(filters, ac.signal),
     ])
-      .then(([s, t, h]) => {
+      .then(([s, t, h, u, q]) => {
         setSummary(s);
         setTimeseries(t);
         setHeatmap(h);
+        setUltima(u);
+        setQualidade(q);
         setError(null);
       })
       .catch((err: unknown) => {
@@ -168,7 +179,40 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
 
       {summary && !error && (
         <div className="grid">
+          <section className="panel panel-ultima">
+            <div className="panel-controls">
+              <div>
+                <h2>Última inspeção recebida do campo</h2>
+                <p className="panel-sub">
+                  Indicadores da tora mais recente — atualiza sozinho quando a máquina sincroniza
+                </p>
+              </div>
+            </div>
+            <UltimaInspecao u={ultima} />
+          </section>
+
           <SummaryCards rows={summary} />
+
+          <section className="panel">
+            <h2>Qualidade da madeira por talhão e clone</h2>
+            <p className="panel-sub">
+              Casca residual, tortuosidade, volume e massa seca prevista — com a proveniência da
+              densidade que gera a massa
+            </p>
+            <QualidadeTalhao rows={qualidade?.porTalhao ?? []} />
+          </section>
+
+          <section className="panel half">
+            <h2>Distribuição de tortuosidade</h2>
+            <p className="panel-sub">Flecha do eixo / comprimento, só toras vistas de lado</p>
+            <Histograma data={qualidade?.tortuosidade ?? []} unidade="tortuosidade" />
+          </section>
+
+          <section className="panel half">
+            <h2>Distribuição de casca residual</h2>
+            <p className="panel-sub">% da superfície da tora ainda coberta por casca</p>
+            <Histograma data={qualidade?.casca ?? []} unidade="casca residual" />
+          </section>
 
           <section className="panel two-thirds">
             <div className="panel-controls">
