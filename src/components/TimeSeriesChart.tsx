@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import type { Bucket, TimeseriesPoint } from '../types';
 import { STATUS_META, STATUS_ORDER } from '../types';
-import { STATUS_HEX, useThemeTokens } from './useThemeTokens';
+import { useThemeTokens } from './useThemeTokens';
 
 // buckets chegam como "YYYY-MM-DDTHH:mm:ss" (hora local do evento) — formata
 // por fatia de string para não envolver fuso horário do navegador.
@@ -32,8 +32,19 @@ export default function TimeSeriesChart({
     return <div className="empty">Sem dados no período selecionado.</div>;
   }
 
+  // Linha precisa de >= 2 pontos para aparecer: com um único bucket (todo o
+  // período num mesmo dia, por exemplo) o gráfico parecia vazio. Poucos
+  // buckets => desenha os pontos; um só => sugere a granularidade menor.
+  const poucos = data.length <= 3;
+  const dica =
+    data.length === 1 && bucket !== 'hour'
+      ? `Todas as inspeções do período caem num único ${bucket === 'day' ? 'dia' : 'intervalo'} — troque para "Por hora" para ver a evolução.`
+      : null;
+
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <>
+    {dica && <p className="chart-hint">{dica}</p>}
+    <ResponsiveContainer width="100%" height={dica ? 236 : 260}>
       <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -12 }}>
         <CartesianGrid stroke={tokens.grid} vertical={false} />
         <XAxis
@@ -71,13 +82,14 @@ export default function TimeSeriesChart({
             type="monotone"
             dataKey={s}
             name={STATUS_META[s].label}
-            stroke={STATUS_HEX[s]}
+            stroke={tokens.status[s]}
             strokeWidth={2}
-            dot={false}
+            dot={poucos ? { r: 4, strokeWidth: 0, fill: tokens.status[s] } : false}
             activeDot={{ r: 4, stroke: tokens.surface, strokeWidth: 2 }}
           />
         ))}
       </LineChart>
     </ResponsiveContainer>
+    </>
   );
 }

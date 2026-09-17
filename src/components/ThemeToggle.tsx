@@ -69,7 +69,7 @@ export default function ThemeToggle() {
       aria-label={`Alternar tema. Atual: ${ROTULO[mode]}`}
     >
       <span aria-hidden="true">{ICONE[mode]}</span>
-      <span>{ROTULO[mode]}</span>
+      <span className="sr-only">{ROTULO[mode]}</span>
     </button>
   );
 }

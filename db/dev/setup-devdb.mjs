@@ -47,6 +47,11 @@ if (already.rowCount === 0) {
 // Trigger de NOTIFY (tempo real no dashboard) — idempotente, sempre aplica.
 await db.query(readFileSync(join(base, '03_notify.sql'), 'utf8'));
 console.log('trigger de tempo real aplicado');
+// Tabela de densidade por clone + indicadores sintéticos (painéis de
+// qualidade) — ambos idempotentes, sempre aplica.
+await db.query(readFileSync(join(base, '04_clones_densidade.sql'), 'utf8'));
+await db.query(readFileSync(join(base, '05_seed_indicadores_dev.sql'), 'utf8'));
+console.log('clones_densidade + indicadores de qualidade aplicados');
 const counts = await db.query(
   'SELECT status_classificacao, COUNT(*)::int AS n FROM toras_inspecionadas GROUP BY 1 ORDER BY 1',
 );

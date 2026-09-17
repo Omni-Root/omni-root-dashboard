@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, UnauthorizedError } from './api';
 import LiveBadge from './components/LiveBadge';
+import VozMenu, { Narrador } from './components/VozMenu';
 import { useLive } from './useLive';
+import { descreverInspecao, descreverResumo, useVoz } from './voz';
+import CameraAoVivo from './components/CameraAoVivo';
 import FiltersBar from './components/Filters';
 import Heatmap from './components/Heatmap';
+import Histograma from './components/Histograma';
+import QualidadeTalhao from './components/QualidadeTalhao';
+import UltimaInspecao from './components/UltimaInspecao';
 import Login from './components/Login';
 import ExportMenu from './components/ExportMenu';
 import ThemeToggle from './components/ThemeToggle';
@@ -15,9 +21,11 @@ import type {
   Filters,
   HeatmapCell,
   Maquina,
+  Qualidade,
   Status,
   SummaryRow,
   TimeseriesPoint,
+  UltimaInspecao as Ultima,
 } from './types';
 
 function isoDaysAgo(days: number): string {
@@ -79,11 +87,48 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
   const [summary, setSummary] = useState<SummaryRow[] | null>(null);
   const [timeseries, setTimeseries] = useState<TimeseriesPoint[] | null>(null);
   const [heatmap, setHeatmap] = useState<HeatmapCell[] | null>(null);
+  const [ultima, setUltima] = useState<Ultima | null>(null);
+  const [qualidade, setQualidade] = useState<Qualidade | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Incrementado a cada aviso de tora nova (SSE): força o efeito de carga a
   // rodar de novo com os mesmos filtros, sem F5.
   const [versao, setVersao] = useState(0);
   const live = useLive(useCallback(() => setVersao((v) => v + 1), []));
+  const voz = useVoz();
+
+  // Alerta falado: quando a "última inspeção" muda DEPOIS da primeira carga,
+  // anuncia conforme a preferência (todas / só falhas / nenhuma). Numa
+  // rajada do sync (várias toras de uma vez) fala quantas chegaram e
+  // descreve só a última — sem enfileirar dezenas de frases.
+  const ultimaAnunciada = useRef<number | null>(null);
+  const novasVistas = useRef(0);
+  useEffect(() => {
+    if (!ultima) return;
+    if (ultimaAnunciada.current === null) {
+      ultimaAnunciada.current = ultima.id; // primeira carga: não anuncia
+      novasVistas.current = live.novas;
+      return;
+    }
+    if (ultima.id === ultimaAnunciada.current) return;
+    ultimaAnunciada.current = ultima.id;
+    const chegaram = Math.max(1, live.novas - novasVistas.current);
+    novasVistas.current = live.novas;
+
+    const politica = voz.prefs.anunciar;
+    if (politica === 'nenhuma') return;
+    if (politica === 'falhas' && ultima.status === 'aprovado') return;
+    const prefixo = chegaram > 1 ? `${chegaram} novas inspeções sincronizadas. Última: ` : 'Nova inspeção. ';
+    voz.falar(prefixo + descreverInspecao(ultima));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ultima?.id]);
+
+  const maquinaFiltrada = maquinas.find((m) => String(m.id) === filters.maquinaId)?.numero_serie ?? null;
+  const lerResumo = () => {
+    if (summary) voz.falar(descreverResumo(summary, filters.from, filters.to, maquinaFiltrada), { forcar: true });
+  };
+  const lerUltima = () => {
+    if (ultima) voz.falar(descreverInspecao(ultima, true), { forcar: true });
+  };
 
   async function logout() {
     await api.logout().catch(() => {
@@ -113,11 +158,15 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
       api.summary(filters, ac.signal),
       api.timeseries(filters, bucket, ac.signal),
       api.heatmap(filters, heatStatuses, ac.signal),
+      api.ultima(filters, ac.signal),
+      api.qualidade(filters, ac.signal),
     ])
-      .then(([s, t, h]) => {
+      .then(([s, t, h, u, q]) => {
         setSummary(s);
         setTimeseries(t);
         setHeatmap(h);
+        setUltima(u);
+        setQualidade(q);
         setError(null);
       })
       .catch((err: unknown) => {
@@ -144,18 +193,20 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
         </div>
         <div className="header-actions">
           <LiveBadge info={live} />
+          <VozMenu voz={voz} />
           <ExportMenu filters={filters} onUnauthorized={onLogout} />
           <ThemeToggle />
           <span className="user-chip" title="Usuário autenticado">
             {user}
+            <button type="button" className="chip-link" onClick={logout}>
+              Sair
+            </button>
           </span>
-          <button type="button" className="btn logout-btn" onClick={logout}>
-            Sair
-          </button>
         </div>
       </header>
 
       <FiltersBar filters={filters} maquinas={maquinas} onChange={setFilters} />
+      <Narrador texto={voz.ultimoTexto} />
 
       {error && (
         <div className="error-banner">
@@ -168,7 +219,75 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
 
       {summary && !error && (
         <div className="grid">
-          <SummaryCards rows={summary} />
+          <section className="panel panel-camera third">
+            <h2>Câmera ao vivo</h2>
+            <p className="panel-sub">O que a garra está vendo agora — só enquanto a máquina tem rede</p>
+            <CameraAoVivo maquinas={maquinas} filtroMaquinaId={filters.maquinaId} />
+          </section>
+
+          <section className="panel panel-ultima two-thirds">
+            <div className="panel-controls">
+              <div>
+                <h2>Última inspeção recebida do campo</h2>
+                <p className="panel-sub">
+                  Indicadores da tora mais recente — atualiza sozinho quando a máquina sincroniza
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ler"
+                onClick={lerUltima}
+                disabled={!ultima || !voz.suportado}
+                title="Ler em voz alta os indicadores desta tora"
+              >
+                <span aria-hidden="true">🔊</span> Ler
+              </button>
+            </div>
+            <UltimaInspecao u={ultima} />
+          </section>
+
+          <div className="cards-wrap">
+            <div className="cards-head">
+              <span className="cards-titulo">Resumo do período</span>
+              <button
+                type="button"
+                className="btn btn-ler"
+                onClick={lerResumo}
+                disabled={!voz.suportado}
+                title="Ler em voz alta o resumo do período filtrado"
+              >
+                <span aria-hidden="true">🔊</span> Ler resumo
+              </button>
+            </div>
+            <SummaryCards rows={summary} />
+          </div>
+
+          <section className="panel">
+            <h2>Qualidade da madeira por talhão e clone</h2>
+            <p className="panel-sub">
+              Casca residual, tortuosidade, volume e massa seca prevista — com a proveniência da
+              densidade que gera a massa
+            </p>
+            <QualidadeTalhao rows={qualidade?.porTalhao ?? []} />
+          </section>
+
+          <section className="panel third">
+            <h2>Distribuição diamétrica</h2>
+            <p className="panel-sub">Toras por classe de diâmetro — 100% das toras, não amostra</p>
+            <Histograma data={qualidade?.diametro ?? []} unidade="diâmetro" />
+          </section>
+
+          <section className="panel third">
+            <h2>Distribuição de casca residual</h2>
+            <p className="panel-sub">% da superfície da tora ainda coberta por casca</p>
+            <Histograma data={qualidade?.casca ?? []} unidade="casca residual" />
+          </section>
+
+          <section className="panel third">
+            <h2>Distribuição de tortuosidade</h2>
+            <p className="panel-sub">Flecha do eixo / comprimento, só toras vistas de lado</p>
+            <Histograma data={qualidade?.tortuosidade ?? []} unidade="tortuosidade" />
+          </section>
 
           <section className="panel two-thirds">
             <div className="panel-controls">

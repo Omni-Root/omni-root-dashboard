@@ -17,6 +17,8 @@ import { streamCsv } from './export-csv.js';
 import { streamPdf } from './export-pdf.js';
 import { streamStanford } from './export-stanford.js';
 import { iniciarTempoReal, rotaEventos } from './live.js';
+import { getQualidade, getUltimaInspecao } from './qualidade.js';
+import { cameraLigada, listarCameras, receberQuadro, streamCamera } from './camera.js';
 
 const app = express();
 const port = Number(process.env.API_PORT ?? 3001);
@@ -110,8 +112,24 @@ app.get('/api/heatmap', requireAuth, route((req) =>
   getHeatmap(filtersFrom(req), parseStatuses(req.query.statuses)),
 ));
 
+// ---- Indicadores de qualidade (exigem sessão) ----
+// Última inspeção: só filtro de máquina (é o cartão ao vivo, independe do período).
+app.get('/api/ultima', requireAuth, route((req) => getUltimaInspecao(parseMaquinaId(req.query.maquinaId))));
+app.get('/api/qualidade', requireAuth, route((req) => getQualidade(filtersFrom(req))));
+
 // ---- Tempo real (exige sessão): SSE com avisos de tora nova ----
 app.get('/api/events', requireAuth, rotaEventos);
+
+// ---- Câmera ao vivo ----
+// A máquina de campo (main.py) EMPURRA quadros JPEG para cá, autenticada por
+// STREAM_TOKEN — é a única rota que recebe dados de fora, e nada dela toca o
+// Postgres (fica só o último quadro em memória). O navegador assiste via
+// MJPEG, com a mesma sessão das outras rotas.
+app.post('/api/camera/frame', express.raw({ type: 'image/jpeg', limit: '2mb' }), receberQuadro);
+app.get('/api/camera/maquinas', requireAuth, (_req, res) => {
+  res.json({ ligada: cameraLigada(), maquinas: listarCameras() });
+});
+app.get('/api/camera/stream', requireAuth, streamCamera);
 
 // ---- Exportações (exigem sessão) ----
 app.get('/api/export/csv', requireAuth, exportRoute(streamCsv));
