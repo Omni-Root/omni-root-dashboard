@@ -1,7 +1,7 @@
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { SummaryRow } from '../types';
 import { STATUS_META, STATUS_ORDER } from '../types';
-import { STATUS_HEX, useThemeTokens } from './useThemeTokens';
+import { useThemeTokens } from './useThemeTokens';
 
 const fmt = new Intl.NumberFormat('pt-BR');
 
@@ -32,7 +32,7 @@ export default function ProportionDonut({ rows }: { rows: SummaryRow[] }) {
           strokeWidth={2}
         >
           {data.map((d) => (
-            <Cell key={d.status} fill={STATUS_HEX[d.status]} />
+            <Cell key={d.status} fill={tokens.status[d.status]} />
           ))}
         </Pie>
         <Tooltip

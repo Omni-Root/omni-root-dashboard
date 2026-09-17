@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import type { Bucket, TimeseriesPoint } from '../types';
 import { STATUS_META, STATUS_ORDER } from '../types';
-import { STATUS_HEX, useThemeTokens } from './useThemeTokens';
+import { useThemeTokens } from './useThemeTokens';
 
 // buckets chegam como "YYYY-MM-DDTHH:mm:ss" (hora local do evento) — formata
 // por fatia de string para não envolver fuso horário do navegador.
@@ -71,7 +71,7 @@ export default function TimeSeriesChart({
             type="monotone"
             dataKey={s}
             name={STATUS_META[s].label}
-            stroke={STATUS_HEX[s]}
+            stroke={tokens.status[s]}
             strokeWidth={2}
             dot={false}
             activeDot={{ r: 4, stroke: tokens.surface, strokeWidth: 2 }}

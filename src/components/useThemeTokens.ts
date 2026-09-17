@@ -10,6 +10,9 @@ export interface ThemeTokens {
   textSecondary: string;
   surface: string;
   border: string;
+  accent: string;
+  textPrimary: string;
+  status: { aprovado: string; quarentena: string; reprovado: string };
 }
 
 function readTokens(): ThemeTokens {
@@ -22,6 +25,13 @@ function readTokens(): ThemeTokens {
     textSecondary: get('--text-secondary'),
     surface: get('--surface'),
     border: get('--border'),
+    accent: get('--accent'),
+    textPrimary: get('--text-primary'),
+    status: {
+      aprovado: get('--status-good'),
+      quarentena: get('--status-warning'),
+      reprovado: get('--status-critical'),
+    },
   };
 }
 
@@ -52,9 +62,11 @@ export function useThemeTokens(): ThemeTokens {
   return tokens;
 }
 
-// Cores de status são fixas (iguais nos dois temas) — seguras como hex em SVG.
+// Cores de status do tema CLARO, como hex, para quem não puder usar o hook
+// (ex.: código fora de componente). Dentro de componentes prefira
+// useThemeTokens().status, que acompanha o tema escuro.
 export const STATUS_HEX = {
-  aprovado: '#0ca30c',
-  quarentena: '#fab219',
-  reprovado: '#d03b3b',
+  aprovado: '#367c2b',
+  quarentena: '#d99a00',
+  reprovado: '#c0392b',
 } as const;

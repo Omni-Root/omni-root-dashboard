@@ -107,6 +107,7 @@ export interface Qualidade {
   porTalhao: QualidadeTalhao[];
   tortuosidade: Faixa[];
   casca: Faixa[];
+  diametro: Faixa[];
 }
 
 // Rótulo da proveniência da densidade — a "base científica" virando pixel:
@@ -119,3 +120,19 @@ export const TIPO_DADO_META: Record<Exclude<TipoDado, null>, { label: string; hi
     hint: 'Média do híbrido E. grandis × urophylla; aguardando laudo do clone',
   },
 };
+
+// ---- Câmera ao vivo (quadros empurrados pelo main.py) ----
+export interface CameraMaquina {
+  maquina: string; // numero_serie (maquina_id do config.json da máquina)
+  ultimoEm: string; // ISO
+  idadeMs: number;
+  online: boolean; // quadro recente o bastante para ser "ao vivo"
+  status: Status | string | null;
+  vista: string | null;
+  ligada: boolean;
+}
+
+export interface CameraEstado {
+  ligada: boolean; // STREAM_TOKEN configurado no servidor
+  maquinas: CameraMaquina[];
+}

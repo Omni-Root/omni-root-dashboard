@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, UnauthorizedError } from './api';
 import LiveBadge from './components/LiveBadge';
 import { useLive } from './useLive';
+import CameraAoVivo from './components/CameraAoVivo';
 import FiltersBar from './components/Filters';
 import Heatmap from './components/Heatmap';
 import Histograma from './components/Histograma';
@@ -179,7 +180,13 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
 
       {summary && !error && (
         <div className="grid">
-          <section className="panel panel-ultima">
+          <section className="panel panel-camera third">
+            <h2>Câmera ao vivo</h2>
+            <p className="panel-sub">O que a garra está vendo agora — só enquanto a máquina tem rede</p>
+            <CameraAoVivo maquinas={maquinas} filtroMaquinaId={filters.maquinaId} />
+          </section>
+
+          <section className="panel panel-ultima two-thirds">
             <div className="panel-controls">
               <div>
                 <h2>Última inspeção recebida do campo</h2>
@@ -202,16 +209,22 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
             <QualidadeTalhao rows={qualidade?.porTalhao ?? []} />
           </section>
 
-          <section className="panel half">
-            <h2>Distribuição de tortuosidade</h2>
-            <p className="panel-sub">Flecha do eixo / comprimento, só toras vistas de lado</p>
-            <Histograma data={qualidade?.tortuosidade ?? []} unidade="tortuosidade" />
+          <section className="panel third">
+            <h2>Distribuição diamétrica</h2>
+            <p className="panel-sub">Toras por classe de diâmetro — 100% das toras, não amostra</p>
+            <Histograma data={qualidade?.diametro ?? []} unidade="diâmetro" />
           </section>
 
-          <section className="panel half">
+          <section className="panel third">
             <h2>Distribuição de casca residual</h2>
             <p className="panel-sub">% da superfície da tora ainda coberta por casca</p>
             <Histograma data={qualidade?.casca ?? []} unidade="casca residual" />
+          </section>
+
+          <section className="panel third">
+            <h2>Distribuição de tortuosidade</h2>
+            <p className="panel-sub">Flecha do eixo / comprimento, só toras vistas de lado</p>
+            <Histograma data={qualidade?.tortuosidade ?? []} unidade="tortuosidade" />
           </section>
 
           <section className="panel two-thirds">

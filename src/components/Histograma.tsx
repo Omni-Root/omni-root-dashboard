@@ -6,9 +6,9 @@ import { useThemeTokens } from './useThemeTokens';
 // magnitude, não identidade — e a matiz é a mesma rampa azul do mapa de
 // calor. Sem legenda: o título do painel nomeia a série.
 //
-// A cor vai como hex porque o Recharts a recebe como atributo SVG (var(--x)
-// não resolve lá). É o passo --seq-5 da rampa, igual nos dois temas.
-const COR_BARRA = '#256abf';
+// A cor vai como valor computado porque o Recharts a recebe como atributo
+// SVG (var(--x) não resolve lá): é o token --accent (verde JD), lido pelo
+// useThemeTokens, que muda junto com o tema.
 
 export default function Histograma({ data, unidade }: { data: Faixa[]; unidade: string }) {
   const tokens = useThemeTokens();
@@ -48,7 +48,7 @@ export default function Histograma({ data, unidade }: { data: Faixa[]; unidade: 
             color: tokens.textSecondary,
           }}
         />
-        <Bar dataKey="total" fill={COR_BARRA} radius={[4, 4, 0, 0]} maxBarSize={56} />
+        <Bar dataKey="total" fill={tokens.accent} radius={[4, 4, 0, 0]} maxBarSize={56} />
       </BarChart>
     </ResponsiveContainer>
   );

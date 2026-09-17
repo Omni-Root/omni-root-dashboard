@@ -1,5 +1,6 @@
 import type {
   Bucket,
+  CameraEstado,
   Filters,
   HeatmapCell,
   Maquina,
@@ -111,6 +112,13 @@ export const api = {
     fetchJson<UltimaInspecao | null>('/api/ultima', { maquinaId: f.maquinaId }, signal),
   qualidade: (f: Filters, signal?: AbortSignal) =>
     fetchJson<Qualidade>('/api/qualidade', filterParams(f), signal),
+
+  // ---- câmera ao vivo ----
+  camera: (signal?: AbortSignal) => fetchJson<CameraEstado>('/api/camera/maquinas', {}, signal),
+  // URL do stream MJPEG (vai direto num <img>; o cookie de sessão vai junto por
+  // ser same-origin). `v` muda para forçar reconexão quando o stream cai.
+  cameraStreamUrl: (maquina: string, v: number) =>
+    `/api/camera/stream?maquina=${encodeURIComponent(maquina)}&v=${v}`,
 
   // ---- exportações ----
   exportCsv: (f: Filters) => download('/api/export/csv', filterParams(f)),

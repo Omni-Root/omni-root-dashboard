@@ -1,27 +1,47 @@
+/* ============================================================
+   PALETA — identidade John Deere
+   Verde JD (PMS 364) #367c2b e amarelo JD (PMS 109) #ffde00.
+   O verde é a cor de marca e de ação (botões, ativo, "ao vivo"); o
+   amarelo é acento raro (filete, destaque). Status continua semântico:
+   aprovado = verde JD, contenção = âmbar legível, rejeitado = vermelho.
+   Tema claro é a base; os blocos escuros só redefinem tokens.
+   ============================================================ */
 :root {
   color-scheme: light;
+  /* marca */
+  --jd-green: #367c2b;
+  --jd-green-dark: #2a5f22;
+  --jd-yellow: #ffde00;
+  --accent: var(--jd-green);
+  --accent-contrast: #ffffff;
+  /* superfícies "de marca", como no PDF: cartão verde-claro e cabeçalho de tabela verde */
+  --tint: #f3f6f1;
+  --tint-strong: #e6eee2;
+  --band: var(--jd-green);
+  --band-text: #ffffff;
+  --band-muted: #dbe9d6;
   /* chrome & ink */
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
-  --text-primary: #0b0b0b;
-  --text-secondary: #52514e;
-  --text-muted: #898781;
-  --grid: #e1e0d9;
-  --axis: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.1);
+  --page: #f4f6f2;
+  --surface: #ffffff;
+  --text-primary: #161a15;
+  --text-secondary: #4d5749;
+  --text-muted: #778072;
+  --grid: #e3e8df;
+  --axis: #c4ccbf;
+  --border: rgba(22, 26, 21, 0.1);
   /* status (fixo, nunca tematizado): aprovado / contenção / rejeitado */
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
-  --status-critical: #d03b3b;
-  /* rampa sequencial azul (heatmap), do mais claro ao mais escuro */
+  --status-good: #367c2b;
+  --status-warning: #d99a00;
+  --status-critical: #c0392b;
+  /* rampa sequencial VERDE (heatmap, histogramas), do mais claro ao mais escuro */
   --seq-0: var(--grid);
-  --seq-1: #cde2fb;
-  --seq-2: #9ec5f4;
-  --seq-3: #6da7ec;
-  --seq-4: #3987e5;
-  --seq-5: #256abf;
-  --seq-6: #184f95;
-  --seq-7: #0d366b;
+  --seq-1: #d9ecd2;
+  --seq-2: #b5d9a8;
+  --seq-3: #8dc47c;
+  --seq-4: #62ab4f;
+  --seq-5: #367c2b;
+  --seq-6: #2a5f22;
+  --seq-7: #1c4217;
 }
 
 /* ---- tema escuro ----
@@ -30,31 +50,66 @@
      - "Claro"  (data-theme="light"): força claro mesmo com o SO no escuro;
      - "Escuro" (data-theme="dark"): força escuro em qualquer caso.
    Os mesmos tokens aparecem nos dois blocos de propósito: o primeiro cobre o
-   modo automático, o segundo a escolha manual. */
+   modo automático, o segundo a escolha manual. No escuro o verde JD sobe um
+   tom (#4c9a3f) para manter contraste sobre o fundo; o amarelo fica igual. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --text-primary: #ffffff;
-    --text-secondary: #c3c2b7;
-    --text-muted: #898781;
-    --grid: #2c2c2a;
-    --axis: #383835;
-    --border: rgba(255, 255, 255, 0.1);
+    --accent: #4c9a3f;
+    --accent-contrast: #0b120a;
+    --tint: #1a2418;
+    --tint-strong: #213022;
+    --band: #2b5f23;
+    --band-text: #ffffff;
+    --band-muted: #cfe0c9;
+    --page: #0e120d;
+    --surface: #171d16;
+    --text-primary: #f2f5f0;
+    --text-secondary: #c2cbbd;
+    --text-muted: #8d978a;
+    --grid: #263024;
+    --axis: #384435;
+    --border: rgba(242, 245, 240, 0.1);
+    --status-good: #4c9a3f;
+    --status-warning: #f0b429;
+    --status-critical: #e05a4b;
+    --seq-1: #1f3a1b;
+    --seq-2: #27512a;
+    --seq-3: #2f6a2f;
+    --seq-4: #3b8534;
+    --seq-5: #4c9a3f;
+    --seq-6: #6fb862;
+    --seq-7: #a4d99a;
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --page: #0d0d0d;
-  --surface: #1a1a19;
-  --text-primary: #ffffff;
-  --text-secondary: #c3c2b7;
-  --text-muted: #898781;
-  --grid: #2c2c2a;
-  --axis: #383835;
-  --border: rgba(255, 255, 255, 0.1);
+  --accent: #4c9a3f;
+  --accent-contrast: #0b120a;
+  --tint: #1a2418;
+  --tint-strong: #213022;
+  --band: #2b5f23;
+  --band-text: #ffffff;
+  --band-muted: #cfe0c9;
+  --page: #0e120d;
+  --surface: #171d16;
+  --text-primary: #f2f5f0;
+  --text-secondary: #c2cbbd;
+  --text-muted: #8d978a;
+  --grid: #263024;
+  --axis: #384435;
+  --border: rgba(242, 245, 240, 0.1);
+  --status-good: #4c9a3f;
+  --status-warning: #f0b429;
+  --status-critical: #e05a4b;
+  --seq-1: #1f3a1b;
+  --seq-2: #27512a;
+  --seq-3: #2f6a2f;
+  --seq-4: #3b8534;
+  --seq-5: #4c9a3f;
+  --seq-6: #6fb862;
+  --seq-7: #a4d99a;
 }
 
 /* "Claro" explícito: reafirma o color-scheme para o navegador não pintar
@@ -82,24 +137,66 @@ body {
   padding: 24px 20px 48px;
 }
 
+/* A faixa verde do cabeçalho vai de borda a borda: o header "escapa" do
+   container com margens negativas e ganha o filete amarelo por baixo, igual
+   ao PDF. O layout continua centralizado em 1180px. */
+.layout {
+  padding-top: 0;
+}
+
 .header {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px 16px;
-  margin-bottom: 16px;
+  margin: 0 calc(50% - 50vw) 20px;
+  padding: 16px max(20px, calc(50vw - 590px));
+  background: var(--band);
+  color: var(--band-text);
+  border-bottom: 4px solid var(--jd-yellow);
 }
 
 .header h1 {
   font-size: 20px;
   margin: 0;
+  color: var(--band-text);
+  letter-spacing: 0.1px;
 }
 
 .header .subtitle {
-  color: var(--text-secondary);
+  color: var(--band-muted);
   display: block;
   margin-top: 2px;
+  font-size: 12.5px;
+}
+
+/* Controles dentro da faixa verde: vidro claro sobre o verde */
+.header .btn,
+.header .user-chip,
+.header .live-badge,
+.header .theme-btn {
+  color: var(--band-text);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.header .btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.header .live-label,
+.header .live-detail {
+  color: var(--band-text);
+}
+
+.header .live-ao-vivo .live-dot {
+  background: var(--jd-yellow);
+  box-shadow: 0 0 0 0 var(--jd-yellow);
+}
+
+.header .export-error {
+  color: #ffd9d4;
 }
 
 .header-actions {
@@ -186,8 +283,8 @@ body {
 }
 
 .live-count {
-  background: var(--status-good);
-  color: #fff;
+  background: var(--jd-yellow);
+  color: #161a15;
   font-weight: 700;
   padding: 1px 7px;
   border-radius: 999px;
@@ -245,9 +342,15 @@ body {
   padding: 28px 24px;
 }
 
+.login-card {
+  border-top: 5px solid var(--jd-green);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+}
+
 .login-card h1 {
   margin: 0;
   font-size: 22px;
+  color: var(--accent);
 }
 
 .login-sub {
@@ -277,9 +380,9 @@ body {
   margin-top: 6px;
   font: inherit;
   font-weight: 600;
-  color: #fff;
-  background: var(--seq-5);
-  border: 1px solid var(--seq-6);
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: 8px;
   padding: 9px 12px;
   cursor: pointer;
@@ -351,8 +454,9 @@ body {
 }
 
 .filters .presets button.active {
-  color: var(--text-primary);
-  border-color: var(--text-primary);
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
   font-weight: 600;
 }
 
@@ -373,8 +477,16 @@ body {
 
 .panel h2 {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0 0 2px;
+  padding-left: 10px;
+  border-left: 3px solid var(--jd-yellow);
+  color: var(--accent);
+  line-height: 1.25;
+}
+
+.panel .panel-sub {
+  padding-left: 13px;
 }
 
 .panel .panel-sub {
@@ -404,9 +516,11 @@ body {
 }
 
 .card {
-  background: var(--surface);
+  position: relative;
+  background: var(--tint);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-left: 5px solid var(--accent);
+  border-radius: 8px;
   padding: 14px 16px;
 }
 
@@ -426,9 +540,11 @@ body {
 }
 
 .card .card-value {
-  font-size: 26px;
-  font-weight: 650;
+  font-size: 28px;
+  font-weight: 700;
   margin-top: 2px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .card .card-share {
@@ -552,8 +668,13 @@ body {
 
 /* ---- última inspeção (cartão ao vivo) ---- */
 .panel-ultima {
-  /* borda na cor da rampa: é o painel "vivo" da página */
-  border-color: color-mix(in srgb, var(--seq-5) 45%, var(--border));
+  /* é o painel "vivo" da página: borda de marca e fundo levemente tingido */
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: var(--tint);
+}
+
+.panel-ultima .tile {
+  background: var(--surface);
 }
 
 .ultima {
@@ -565,8 +686,8 @@ body {
    vez. Nunca é a única pista — o chip "Ao vivo" e a hora também mudam. */
 @keyframes ultima-flash {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--seq-5) 55%, transparent);
-    background: color-mix(in srgb, var(--seq-5) 10%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--jd-yellow) 70%, transparent);
+    background: color-mix(in srgb, var(--jd-yellow) 18%, transparent);
   }
   100% {
     box-shadow: 0 0 0 12px transparent;
@@ -706,10 +827,24 @@ body {
 }
 
 .tabela th {
-  color: var(--text-secondary);
+  color: var(--band-text);
+  background: var(--band);
   font-weight: 600;
   font-size: 12px;
   white-space: nowrap;
+  border-bottom: none;
+}
+
+.tabela thead th:first-child {
+  border-radius: 6px 0 0 0;
+}
+
+.tabela thead th:last-child {
+  border-radius: 0 6px 0 0;
+}
+
+.tabela tbody tr:nth-child(even) {
+  background: var(--tint);
 }
 
 .tabela th.num,
@@ -720,10 +855,125 @@ body {
 }
 
 .tabela tbody tr:hover {
-  background: color-mix(in srgb, var(--grid) 55%, transparent);
+  background: var(--tint-strong);
 }
 
 .tabela .muted {
   color: var(--text-muted);
   font-size: 12px;
+}
+
+/* ---- câmera ao vivo (quadros empurrados pela máquina) ---- */
+.panel-camera {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
+.camera {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.camera-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.camera-head select {
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-primary);
+  background: var(--page);
+  border: 1px solid var(--axis);
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+.camera-serie {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.camera-frame {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  max-width: 100%;
+  background: #0b0f0a;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.camera-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: filter 0.4s ease, opacity 0.4s ease;
+}
+
+/* Sem sinal: o último quadro fica visível mas claramente "morto" — nunca um
+   vídeo parado fingindo ser ao vivo. */
+.camera-offline .camera-frame img {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  text-align: center;
+  padding: 16px;
+  color: #f2f5f0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.camera-overlay strong {
+  font-size: 16px;
+}
+
+.camera-overlay span {
+  font-size: 12px;
+  max-width: 34ch;
+}
+
+.camera-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.camera-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.camera-status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.camera-hint {
+  color: var(--text-muted);
+  flex-basis: 100%;
+}
+
+.camera-empty code {
+  font-size: 12px;
+  background: var(--tint-strong);
+  padding: 1px 5px;
+  border-radius: 4px;
 }

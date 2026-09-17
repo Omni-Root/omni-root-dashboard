@@ -209,6 +209,7 @@ export interface Qualidade {
   porTalhao: QualidadeTalhao[];
   tortuosidade: Faixa[]; // histograma (só toras com medida)
   casca: Faixa[]; // histograma
+  diametro: Faixa[]; // distribuição diamétrica (classes de 4 cm)
 }
 
 // Faixas de tortuosidade (flecha/comprimento, %): o main.py documenta que 0 é
@@ -225,6 +226,18 @@ const FAIXAS_CASCA: [string, number, number][] = [
   ['5–15%', 5, 15],
   ['15–30%', 15, 30],
   ['> 30%', 30, 1e9],
+];
+
+// Distribuição diamétrica em classes de 4 cm — o gráfico clássico do
+// inventário florestal, só que com 100% das toras e ao vivo.
+const FAIXAS_DIAM: [string, number, number][] = [
+  ['< 10 cm', -1, 10],
+  ['10–14', 10, 14],
+  ['14–18', 14, 18],
+  ['18–22', 18, 22],
+  ['22–26', 22, 26],
+  ['26–30', 26, 30],
+  ['≥ 30 cm', 30, 1e9],
 ];
 
 function histograma(valores: (number | null)[], faixas: [string, number, number][]): Faixa[] {
@@ -259,7 +272,7 @@ export async function getQualidade(f: Filters): Promise<Qualidade> {
        ORDER BY toras DESC`,
       args,
     ),
-    pool.query(`WITH p AS (${PIVOT_POR_TORA}) SELECT p.tort, p.casca FROM p`, args),
+    pool.query(`WITH p AS (${PIVOT_POR_TORA}) SELECT p.tort, p.casca, p.diam FROM p`, args),
   ]);
 
   const porTalhao = (agg.rows as Record<string, unknown>[]).map((r) => {
@@ -286,11 +299,12 @@ export async function getQualidade(f: Filters): Promise<Qualidade> {
     } satisfies QualidadeTalhao;
   });
 
-  const linhas = dist.rows as { tort: number | null; casca: number | null }[];
+  const linhas = dist.rows as { tort: number | null; casca: number | null; diam: number | null }[];
   return {
     porTalhao,
     tortuosidade: histograma(linhas.map((r) => r.tort), FAIXAS_TORT),
     casca: histograma(linhas.map((r) => r.casca), FAIXAS_CASCA),
+    diametro: histograma(linhas.map((r) => r.diam), FAIXAS_DIAM),
   };
 }
 
