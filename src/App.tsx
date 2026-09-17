@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, UnauthorizedError } from './api';
 import LiveBadge from './components/LiveBadge';
+import VozMenu, { Narrador } from './components/VozMenu';
 import { useLive } from './useLive';
+import { descreverInspecao, descreverResumo, useVoz } from './voz';
 import CameraAoVivo from './components/CameraAoVivo';
 import FiltersBar from './components/Filters';
 import Heatmap from './components/Heatmap';
@@ -92,6 +94,41 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
   // rodar de novo com os mesmos filtros, sem F5.
   const [versao, setVersao] = useState(0);
   const live = useLive(useCallback(() => setVersao((v) => v + 1), []));
+  const voz = useVoz();
+
+  // Alerta falado: quando a "última inspeção" muda DEPOIS da primeira carga,
+  // anuncia conforme a preferência (todas / só falhas / nenhuma). Numa
+  // rajada do sync (várias toras de uma vez) fala quantas chegaram e
+  // descreve só a última — sem enfileirar dezenas de frases.
+  const ultimaAnunciada = useRef<number | null>(null);
+  const novasVistas = useRef(0);
+  useEffect(() => {
+    if (!ultima) return;
+    if (ultimaAnunciada.current === null) {
+      ultimaAnunciada.current = ultima.id; // primeira carga: não anuncia
+      novasVistas.current = live.novas;
+      return;
+    }
+    if (ultima.id === ultimaAnunciada.current) return;
+    ultimaAnunciada.current = ultima.id;
+    const chegaram = Math.max(1, live.novas - novasVistas.current);
+    novasVistas.current = live.novas;
+
+    const politica = voz.prefs.anunciar;
+    if (politica === 'nenhuma') return;
+    if (politica === 'falhas' && ultima.status === 'aprovado') return;
+    const prefixo = chegaram > 1 ? `${chegaram} novas inspeções sincronizadas. Última: ` : 'Nova inspeção. ';
+    voz.falar(prefixo + descreverInspecao(ultima));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ultima?.id]);
+
+  const maquinaFiltrada = maquinas.find((m) => String(m.id) === filters.maquinaId)?.numero_serie ?? null;
+  const lerResumo = () => {
+    if (summary) voz.falar(descreverResumo(summary, filters.from, filters.to, maquinaFiltrada), { forcar: true });
+  };
+  const lerUltima = () => {
+    if (ultima) voz.falar(descreverInspecao(ultima, true), { forcar: true });
+  };
 
   async function logout() {
     await api.logout().catch(() => {
@@ -156,18 +193,20 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
         </div>
         <div className="header-actions">
           <LiveBadge info={live} />
+          <VozMenu voz={voz} />
           <ExportMenu filters={filters} onUnauthorized={onLogout} />
           <ThemeToggle />
           <span className="user-chip" title="Usuário autenticado">
             {user}
+            <button type="button" className="chip-link" onClick={logout}>
+              Sair
+            </button>
           </span>
-          <button type="button" className="btn logout-btn" onClick={logout}>
-            Sair
-          </button>
         </div>
       </header>
 
       <FiltersBar filters={filters} maquinas={maquinas} onChange={setFilters} />
+      <Narrador texto={voz.ultimoTexto} />
 
       {error && (
         <div className="error-banner">
@@ -194,11 +233,34 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
                   Indicadores da tora mais recente — atualiza sozinho quando a máquina sincroniza
                 </p>
               </div>
+              <button
+                type="button"
+                className="btn btn-ler"
+                onClick={lerUltima}
+                disabled={!ultima || !voz.suportado}
+                title="Ler em voz alta os indicadores desta tora"
+              >
+                <span aria-hidden="true">🔊</span> Ler
+              </button>
             </div>
             <UltimaInspecao u={ultima} />
           </section>
 
-          <SummaryCards rows={summary} />
+          <div className="cards-wrap">
+            <div className="cards-head">
+              <span className="cards-titulo">Resumo do período</span>
+              <button
+                type="button"
+                className="btn btn-ler"
+                onClick={lerResumo}
+                disabled={!voz.suportado}
+                title="Ler em voz alta o resumo do período filtrado"
+              >
+                <span aria-hidden="true">🔊</span> Ler resumo
+              </button>
+            </div>
+            <SummaryCards rows={summary} />
+          </div>
 
           <section className="panel">
             <h2>Qualidade da madeira por talhão e clone</h2>

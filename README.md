@@ -116,9 +116,32 @@ gráficos continuariam com as cores do tema anterior após a troca.
 
 ---
 
-## 6. Exportações
+## 6. Acessibilidade — narração (texto para voz)
 
-Três botões no cabeçalho, todos respeitando o período e a máquina filtrados:
+Botão **🔊** no cabeçalho. Usa a **Web Speech API** do navegador (sem
+dependência; vozes pt-BR do próprio Windows/Chrome). Três usos:
+
+| Uso | O que faz |
+|---|---|
+| **Alerta falado ao vivo** | Quando uma inspeção nova sincroniza do campo, o painel fala: *"Nova inspeção. Tora rejeitada às 15 e 42 na máquina X, Talhão Y. 1 defeito: nó morto. Diâmetro 18 centímetros e casca residual 8 por cento."* Numa rajada do sync, diz quantas chegaram e descreve só a última. |
+| **Ler resumo** / **Ler** | Botões nos painéis "Resumo do período" e "Última inspeção" leem o conteúdo sob demanda (a leitura da tora inclui tortuosidade, densidade, massa e saúde). |
+| **Leitor de tela** | Tudo o que é falado vai também para uma região `aria-live` — NVDA/JAWS recebem o mesmo alerta, com a voz ligada ou não. |
+
+Preferências (▾ ao lado do 🔊, salvas no `localStorage`): o que anunciar
+automaticamente (**só contenção e rejeitadas** — padrão —, todas, nenhuma),
+voz, velocidade e "Testar voz". Um alerta novo substitui o anterior — nunca
+enfileira. O botão fica amarelo quando ligado e pulsa enquanto fala.
+
+Por que isso importa para o desafio: o critério de UX pede *ergonomia
+cognitiva e alertas* para o gestor/operador. Um gestor não fica olhando o
+painel; uma tora rejeitada anunciada em voz é um alerta que não exige atenção
+visual. Textos em `src/voz.ts` (classes do modelo traduzidas: `Dead_Knot` →
+"nó morto" etc.).
+
+## 7. Exportações
+
+Menu **Exportar ▾** no cabeçalho, com três formatos, todos respeitando o
+período e a máquina filtrados:
 
 ### Exportar CSV
 Dados **brutos** das inspeções do período — uma linha por tora: data/hora,
@@ -164,7 +187,7 @@ CRC32), sem dependência de biblioteca de zip.
 
 ---
 
-## 7. Variáveis de ambiente
+## 8. Variáveis de ambiente
 
 Copie `.env.example` para `.env` e preencha. O `.env` real **nunca** vai para o
 Git (já está no `.gitignore`) — é assim que se leva a configuração para outra
@@ -189,7 +212,7 @@ tradução de configuração.
 
 ---
 
-## 8. Rodando
+## 9. Rodando
 
 ### Desenvolvimento
 
@@ -220,7 +243,7 @@ npm run typecheck
 
 ---
 
-## 9. Sem acesso ao banco central? Banco local de teste
+## 10. Sem acesso ao banco central? Banco local de teste
 
 O diretório `db/dev/` sobe um PostgreSQL isolado na porta **5433**, com o schema
 real (`01_schema.sql`, cópia do repo principal) e **8.000 inspeções sintéticas**
@@ -251,7 +274,7 @@ No `.env`, use `PG_PORT=5433` e senha `dev` (Docker) ou vazia (opção B).
 
 ---
 
-## 10. Endpoints da API
+## 11. Endpoints da API
 
 | Rota | Sessão | Parâmetros | Retorna |
 |---|---|---|---|
@@ -276,7 +299,7 @@ inteira para o cliente.
 
 ---
 
-## 11. Estrutura de arquivos
+## 12. Estrutura de arquivos
 
 ```
 server/
@@ -306,7 +329,7 @@ db/dev/               # PostgreSQL de desenvolvimento (schema + seed sintético)
 
 ---
 
-## 12. Decisões técnicas
+## 13. Decisões técnicas
 
 - **Schema**: o real do repo principal (`Banco de dados/schema_postgres.sql`).
   Tabela `toras_inspecionadas`, com `status_classificacao` ∈ `aprovado` /
