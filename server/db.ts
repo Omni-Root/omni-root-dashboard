@@ -14,3 +14,12 @@ export const pool = new pg.Pool({
   max: 5,
   connectionTimeoutMillis: 5_000,
 });
+
+// Quando o Postgres cai (ou é reiniciado), os clientes OCIOSOS do pool
+// emitem 'error'. Sem este handler o Node encerra o processo inteiro
+// ("Unhandled 'error' event") — e aí nem o login, que não usa banco,
+// responde mais. Com ele, o pool descarta o cliente morto e reconecta na
+// próxima consulta; o painel mostra "sem banco" e volta sozinho.
+pool.on('error', (err) => {
+  console.warn('[db] conexão ociosa do pool caiu (Postgres fora?):', err.message);
+});

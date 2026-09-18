@@ -16,17 +16,30 @@ import { useThemeTokens } from './useThemeTokens';
 // por fatia de string para não envolver fuso horário do navegador.
 function formatBucket(b: string, bucket: Bucket): string {
   const dayPart = `${b.slice(8, 10)}/${b.slice(5, 7)}`;
+  if (bucket === 'minute') return b.slice(11, 16); // só HH:MM: o dia é o mesmo na prática
   return bucket === 'hour' ? `${dayPart} ${b.slice(11, 16)}` : dayPart;
 }
 
+// Soma corrente por classificação: a linha só sobe.
+function acumular(data: TimeseriesPoint[]): TimeseriesPoint[] {
+  let a = 0, q = 0, r = 0;
+  return data.map((p) => {
+    a += p.aprovado; q += p.quarentena; r += p.reprovado;
+    return { bucket: p.bucket, aprovado: a, quarentena: q, reprovado: r };
+  });
+}
+
 export default function TimeSeriesChart({
-  data,
+  data: bruto,
   bucket,
+  acumulado = false,
 }: {
   data: TimeseriesPoint[];
   bucket: Bucket;
+  acumulado?: boolean;
 }) {
   const tokens = useThemeTokens();
+  const data = acumulado ? acumular(bruto) : bruto;
 
   if (data.length === 0) {
     return <div className="empty">Sem dados no período selecionado.</div>;
@@ -37,8 +50,8 @@ export default function TimeSeriesChart({
   // buckets => desenha os pontos; um só => sugere a granularidade menor.
   const poucos = data.length <= 3;
   const dica =
-    data.length === 1 && bucket !== 'hour'
-      ? `Todas as inspeções do período caem num único ${bucket === 'day' ? 'dia' : 'intervalo'} — troque para "Por hora" para ver a evolução.`
+    data.length === 1 && bucket !== 'minute'
+      ? `Todas as inspeções do período caem num único intervalo — troque para "${bucket === 'hour' ? 'Por minuto' : 'Por hora'}" para ver a evolução.`
       : null;
 
   return (

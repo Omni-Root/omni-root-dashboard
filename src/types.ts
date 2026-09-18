@@ -24,7 +24,7 @@ export interface HeatmapCell {
   total: number;
 }
 
-export type Bucket = 'hour' | 'day' | 'week';
+export type Bucket = 'minute' | 'hour' | 'day' | 'week';
 
 export interface Filters {
   from: string;

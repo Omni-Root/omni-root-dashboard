@@ -26,8 +26,16 @@ export function useLive(onNova: () => void, debounceMs = 800): LiveInfo {
       const d = JSON.parse((ev as MessageEvent).data) as { listen: boolean };
       setInfo((i) => ({ ...i, estado: 'ao-vivo', push: d.listen }));
     });
-    es.addEventListener('tora', () => {
-      setInfo((i) => ({ ...i, estado: 'ao-vivo', ultimaEm: new Date(), novas: i.novas + 1 }));
+    es.addEventListener('tora', (ev) => {
+      // op = 'UPDATE' é a MESMA tora sendo refinada (evento incremental):
+      // atualiza os painéis, mas não conta como inspeção nova.
+      let nova = true;
+      try {
+        nova = (JSON.parse((ev as MessageEvent).data) as { op?: string }).op !== 'UPDATE';
+      } catch {
+        /* payload sem op: trata como nova */
+      }
+      setInfo((i) => ({ ...i, estado: 'ao-vivo', ultimaEm: new Date(), novas: nova ? i.novas + 1 : i.novas }));
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => cb.current(), debounceMs);
     });

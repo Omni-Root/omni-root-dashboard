@@ -20,6 +20,16 @@ import { iniciarTempoReal, rotaEventos } from './live.js';
 import { getQualidade, getUltimaInspecao } from './qualidade.js';
 import { cameraLigada, listarCameras, receberQuadro, streamCamera } from './camera.js';
 
+// Rede de segurança: um erro fora de um handler (promessa sem catch, evento
+// 'error' sem ouvinte) nunca deve derrubar o servidor da demo. Loga e segue;
+// as rotas tratam seus próprios erros e devolvem 500 quando o banco falha.
+process.on('unhandledRejection', (reason) => {
+  console.error('[server] promessa rejeitada sem tratamento:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[server] exceção não tratada (processo mantido vivo):', err);
+});
+
 const app = express();
 const port = Number(process.env.API_PORT ?? 3001);
 

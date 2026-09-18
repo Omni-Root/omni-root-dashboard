@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api';
 import ThemeToggle from './ThemeToggle';
 
@@ -7,6 +7,31 @@ export default function Login({ onSuccess }: { onSuccess: (user: string) => void
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // null = ainda não sondou; false = servidor da API não responde (fetch falhou)
+  const [servidorOk, setServidorOk] = useState<boolean | null>(null);
+
+  // Sonda o servidor ao abrir e, enquanto ele estiver fora, a cada 5 s — o
+  // aviso some sozinho quando ele voltar, sem F5. (O login em si não usa o
+  // banco: com o servidor de pé, entra mesmo com o Postgres parado.)
+  useEffect(() => {
+    let ativo = true;
+    const sondar = async () => {
+      try {
+        const res = await fetch('/api/me', { cache: 'no-store' });
+        if (ativo) setServidorOk(res.ok || res.status === 401);
+      } catch {
+        if (ativo) setServidorOk(false);
+      }
+    };
+    void sondar();
+    const t = setInterval(() => {
+      if (servidorOk === false) void sondar();
+    }, 5000);
+    return () => {
+      ativo = false;
+      clearInterval(t);
+    };
+  }, [servidorOk]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -16,7 +41,13 @@ export default function Login({ onSuccess }: { onSuccess: (user: string) => void
       const { user } = await api.login(username, password);
       onSuccess(user);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Falha no login');
+      // fetch que nem chegou ao servidor vira TypeError: é "servidor fora", não "senha errada"
+      if (err instanceof TypeError) {
+        setServidorOk(false);
+        setError('Servidor do dashboard não respondeu. Vou tentar de novo sozinho — confira se o `npm run dev` está rodando.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Falha no login');
+      }
     } finally {
       setBusy(false);
     }
@@ -32,6 +63,11 @@ export default function Login({ onSuccess }: { onSuccess: (user: string) => void
         <h1>Omni-Root</h1>
         <p className="login-sub">Dashboard · Qualidade da Madeira</p>
 
+        {servidorOk === false && !error && (
+          <div className="login-error" role="status">
+            Servidor do dashboard fora do ar — tentando reconectar a cada 5 s…
+          </div>
+        )}
         {error && (
           <div className="login-error" role="alert">
             {error}

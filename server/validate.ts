@@ -6,7 +6,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export const STATUSES = ['aprovado', 'quarentena', 'reprovado'] as const;
 export type Status = (typeof STATUSES)[number];
 
-export const BUCKETS = ['hour', 'day', 'week'] as const;
+export const BUCKETS = ['minute', 'hour', 'day', 'week'] as const;
 export type Bucket = (typeof BUCKETS)[number];
 
 export class ValidationError extends Error {}

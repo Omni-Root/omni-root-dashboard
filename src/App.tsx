@@ -81,6 +81,9 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
     maquinaId: '',
   });
   const [bucket, setBucket] = useState<Bucket>('day');
+  // Acumulado: cada ponto soma tudo até ali — a linha só sobe. É o modo que
+  // "constrói" o gráfico ao vivo durante a demonstração.
+  const [acumulado, setAcumulado] = useState(false);
   const [heatStatuses, setHeatStatuses] = useState<Status[]>(['reprovado', 'quarentena']);
 
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
@@ -182,6 +185,28 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
 
   const loading = summary === null && !error;
 
+  // Banco caiu (500 nas rotas) ou servidor reiniciou: em vez de ficar parado
+  // no erro até um F5, sonda /api/health a cada 5 s e recarrega sozinho
+  // quando o banco responde de novo. `tentativas` aparece no banner.
+  const [tentativas, setTentativas] = useState(0);
+  useEffect(() => {
+    if (!error) {
+      setTentativas(0);
+      return;
+    }
+    let ativo = true;
+    const t = setInterval(async () => {
+      const ok = await api.health();
+      if (!ativo) return;
+      if (ok) setVersao((v) => v + 1);
+      else setTentativas((n) => n + 1);
+    }, 5000);
+    return () => {
+      ativo = false;
+      clearInterval(t);
+    };
+  }, [error]);
+
   return (
     <div className="layout">
       <header className="header">
@@ -209,9 +234,14 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
       <Narrador texto={voz.ultimoTexto} />
 
       {error && (
-        <div className="error-banner">
+        <div className="error-banner" role="status">
           <strong>Não foi possível carregar os dados.</strong> {error} — verifique a
           conexão com o PostgreSQL central (variáveis PG_* no .env).
+          <span className="error-retry">
+            {' '}
+            Tentando de novo a cada 5 s{tentativas > 0 ? ` (${tentativas}× sem resposta)` : ''}… os
+            painéis voltam sozinhos quando o banco responder.
+          </span>
         </div>
       )}
 
@@ -295,17 +325,24 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
                 <h2>Eventos ao longo do tempo</h2>
                 <p className="panel-sub">Contagem por classificação em cada intervalo</p>
               </div>
-              <select
-                value={bucket}
-                onChange={(e) => setBucket(e.target.value as Bucket)}
-                aria-label="Granularidade da série temporal"
-              >
-                <option value="hour">Por hora</option>
-                <option value="day">Por dia</option>
-                <option value="week">Por semana</option>
-              </select>
+              <div className="panel-opcoes">
+                <label className="chk">
+                  <input type="checkbox" checked={acumulado} onChange={(e) => setAcumulado(e.target.checked)} />
+                  Acumulado
+                </label>
+                <select
+                  value={bucket}
+                  onChange={(e) => setBucket(e.target.value as Bucket)}
+                  aria-label="Granularidade da série temporal"
+                >
+                  <option value="minute">Por minuto</option>
+                  <option value="hour">Por hora</option>
+                  <option value="day">Por dia</option>
+                  <option value="week">Por semana</option>
+                </select>
+              </div>
             </div>
-            <TimeSeriesChart data={timeseries ?? []} bucket={bucket} />
+            <TimeSeriesChart data={timeseries ?? []} bucket={bucket} acumulado={acumulado} />
           </section>
 
           <section className="panel third">

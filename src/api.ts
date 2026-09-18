@@ -72,6 +72,16 @@ export interface MeResponse {
 }
 
 export const api = {
+  // ---- saúde do servidor/banco (pública) ----
+  health: async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/health', { cache: 'no-store' });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
   // ---- sessão ----
   me: async (): Promise<MeResponse> => {
     const res = await fetch('/api/me');

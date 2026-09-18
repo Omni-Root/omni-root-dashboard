@@ -64,7 +64,16 @@ async function lerUltimoId(): Promise<number> {
 function anunciar(id: number, extra: Record<string, unknown> = {}): void {
   if (id <= ultimoIdAnunciado) return;
   ultimoIdAnunciado = id;
-  transmitir('tora', { id, ...extra, em: new Date().toISOString() });
+  transmitir('tora', { id, op: 'INSERT', ...extra, em: new Date().toISOString() });
+}
+
+/**
+ * Tora já conhecida que foi ATUALIZADA (evento incremental do main.py: o
+ * mesmo registro é refinado enquanto a tora está na frente da câmera).
+ * Não passa pelo filtro de id novo — é o mesmo id, com números novos.
+ */
+function anunciarAtualizacao(id: number, extra: Record<string, unknown> = {}): void {
+  transmitir('tora', { id, ...extra, op: 'UPDATE', em: new Date().toISOString() });
 }
 
 async function iniciarListen(): Promise<void> {
@@ -87,7 +96,8 @@ async function iniciarListen(): Promise<void> {
       /* payload não-JSON: só avisa que houve tora nova */
     }
     const id = Number(dados.id ?? 0);
-    if (id > 0) anunciar(id, dados);
+    if (id > 0 && dados.op === 'UPDATE') anunciarAtualizacao(id, dados);
+    else if (id > 0) anunciar(id, dados);
     else transmitir('tora', { ...dados, em: new Date().toISOString() });
   });
 
