@@ -134,7 +134,7 @@ export default function VozMenu({ voz }: { voz: Voz }) {
               type="button"
               className="btn"
               onClick={() =>
-                voz.falar('Tora rejeitada às 15 e 42 na máquina de teste. 1 defeito: nó morto. Diâmetro 20 centímetros, casca residual 8 por cento.', { forcar: true })
+                voz.falar('Tora rejeitada às 15 e 42 na máquina de teste. 1 defeito: nó morto. Diâmetro 17,8 centímetros e casca residual 11,6 por cento.', { forcar: true })
               }
             >
               Testar voz

@@ -67,8 +67,25 @@ const DEFEITO_FALADO: Record<string, string> = {
   resin: 'bolsa de resina',
 };
 
-const nf = (v: number | null, casas = 0) =>
-  v == null ? null : v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+// Os números falados têm que ser EXATAMENTE os que estão na tela: mesma
+// quantidade de casas decimais de cada painel (ver UltimaInspecao.tsx e
+// SummaryCards.tsx). Antes a voz arredondava para inteiro e dizia "dezoito
+// centímetros" enquanto a tela mostrava "17,8 cm" — quem ouve e lê ao mesmo
+// tempo percebe a diferença.
+//
+// O separador de MILHAR é removido: alguns sintetizadores leem "1.234" como
+// "um ponto dois três quatro". A vírgula decimal é lida corretamente
+// ("17,8" -> "dezessete vírgula oito").
+//
+// `casas` = máximo de decimais; `minCasas` = mínimo (padrão: igual ao máximo).
+// Usar minCasas < casas reproduz o Intl.NumberFormat com só
+// `maximumFractionDigits`, que é o dos percentuais dos cartões de resumo.
+const nf = (v: number | null, casas = 1, minCasas = casas) =>
+  v == null
+    ? null
+    : v
+        .toLocaleString('pt-BR', { minimumFractionDigits: minCasas, maximumFractionDigits: casas })
+        .replace(/\./g, '');
 
 function listar(itens: string[]): string {
   if (itens.length <= 1) return itens.join('');
@@ -95,15 +112,29 @@ export function descreverInspecao(u: UltimaInspecao, completa = false): string {
     partes.push('sem defeitos');
   }
 
+  // Cada linha abaixo espelha um tile do cartão "Última inspeção", com as
+  // MESMAS casas decimais e a MESMA unidade que aparecem lá.
   const medidas: string[] = [];
-  if (u.diametro_cm != null) medidas.push(`diâmetro ${nf(u.diametro_cm)} centímetros`);
-  if (u.casca_pct != null) medidas.push(`casca residual ${nf(u.casca_pct)} por cento`);
+  if (u.diametro_cm != null) medidas.push(`diâmetro ${nf(u.diametro_cm)} centímetros`);       // tile: 1 casa, cm
+  if (u.casca_pct != null) medidas.push(`casca residual ${nf(u.casca_pct)} por cento`);       // tile: 1 casa, %
   if (completa) {
-    if (u.tortuosidade != null) medidas.push(`tortuosidade ${nf(u.tortuosidade, 1)} por cento`);
-    if (u.comprimento_cm != null) medidas.push(`comprimento ${nf(u.comprimento_cm / 100, 1)} metros`);
-    if (u.densidade.valor != null) medidas.push(`densidade de referência ${nf(u.densidade.valor)} quilos por metro cúbico`);
-    if (u.massa_kg != null) medidas.push(`massa seca estimada ${nf(u.massa_kg)} quilos`);
-    if (u.saude_pct != null) medidas.push(`saúde ${nf(u.saude_pct)} por cento`);
+    if (u.tortuosidade != null) medidas.push(`tortuosidade ${nf(u.tortuosidade)} por cento`); // tile: 1 casa
+    if (u.comprimento_cm != null) medidas.push(`comprimento ${nf(u.comprimento_cm, 0)} centímetros`); // tile: 0 casas, cm
+    if (u.densidade.valor != null) medidas.push(`densidade de referência ${nf(u.densidade.valor, 0)} quilos por metro cúbico`); // tile: 0 casas
+    if (u.massa_kg != null) {
+      // O tile mostra a faixa mín.–máx. quando o clone tem faixa cadastrada,
+      // e o volume quando não tem: a voz diz o mesmo.
+      const temFaixa = u.massa_min_kg != null && u.massa_max_kg != null;
+      medidas.push(
+        `massa seca estimada ${nf(u.massa_kg)} quilos` +
+          (temFaixa
+            ? `, faixa de ${nf(u.massa_min_kg)} a ${nf(u.massa_max_kg)} quilos`
+            : u.volume_m3 != null
+              ? `, de um volume de ${nf(u.volume_m3, 3)} metros cúbicos`
+              : ''),
+      );
+    }
+    if (u.saude_pct != null) medidas.push(`saúde ${nf(u.saude_pct, 0)} por cento`);
   }
   if (medidas.length) partes.push(listar(medidas));
   return partes.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('. ') + '.';
@@ -116,13 +147,15 @@ export function descreverResumo(rows: SummaryRow[], from: string, to: string, ma
   const data = (iso: string) => `${Number(iso.slice(8, 10))} de ${MESES[Number(iso.slice(5, 7)) - 1]}`;
   const escopo = maquina ? `, máquina ${maquina}` : '';
   if (total === 0) return `Nenhuma inspeção entre ${data(from)} e ${data(to)}${escopo}.`;
-  const pct = (n: number) => `${Math.round((100 * n) / total)} por cento`;
+  // Cartões de resumo usam Intl percent com maximumFractionDigits: 1
+  // ("71,6%", mas "50%" sem casa) — a voz reproduz isso.
+  const pct = (n: number) => `${nf((100 * n) / total, 1, 0)} por cento`;
   const ap = por.get('aprovado') ?? 0;
   const qu = por.get('quarentena') ?? 0;
   const re = por.get('reprovado') ?? 0;
   return (
-    `Entre ${data(from)} e ${data(to)}${escopo}: ${nf(total)} ${total === 1 ? 'inspeção' : 'inspeções'}. ` +
-    `${nf(ap)} aprovadas, ${pct(ap)}. ${nf(qu)} em contenção, ${pct(qu)}. ${nf(re)} rejeitadas, ${pct(re)}.`
+    `Entre ${data(from)} e ${data(to)}${escopo}: ${nf(total, 0)} ${total === 1 ? 'inspeção' : 'inspeções'}. ` +
+    `${nf(ap, 0)} aprovadas, ${pct(ap)}. ${nf(qu, 0)} em contenção, ${pct(qu)}. ${nf(re, 0)} rejeitadas, ${pct(re)}.`
   );
 }
 
