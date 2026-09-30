@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { AlertaZona, Mapa, MapaCelula, MapaPonto, Metrica, Nivel } from '../types';
 import { FONTE_POSICAO_META } from '../types';
-import { useThemeTokens, type ThemeTokens } from './useThemeTokens';
+import { useThemeTokens, type ThemeTokens } from '../hooks/useThemeTokens';
 
 // MAPA DE QUALIDADE — onde está a madeira ruim, e o que fazer a respeito.
 //
@@ -203,6 +203,11 @@ export default function MapaQualidade({ mapa }: { mapa: Mapa | null }) {
         <span>
           <strong>{mapa.com_posicao}</strong> de {mapa.total} toras do período com posição
           {semPosicao > 0 && ` · ${semPosicao} sem posição (fora do mapa)`}
+          {mapa.luz_critica > 0 && (
+            <span title="Medidas em luz crítica (baixa confiança): aparecem no mapa, mas a casca e a tortuosidade delas não entram nas médias nem nos alertas">
+              {` · ${mapa.luz_critica} medidas em luz crítica (fora dos alertas)`}
+            </span>
+          )}
           {mapa.pontos_truncados && ` · mostrando as ${mapa.pontos.length} mais recentes como ponto`}
         </span>
         <span>

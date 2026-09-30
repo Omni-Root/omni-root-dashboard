@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import type { Bucket, TimeseriesPoint } from '../types';
 import { STATUS_META, STATUS_ORDER } from '../types';
-import { useThemeTokens } from './useThemeTokens';
+import { useThemeTokens } from '../hooks/useThemeTokens';
 
 // buckets chegam como "YYYY-MM-DDTHH:mm:ss" (hora local do evento) — formata
 // por fatia de string para não envolver fuso horário do navegador.

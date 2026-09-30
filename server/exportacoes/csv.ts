@@ -3,8 +3,9 @@
 // Formato amigável ao Excel pt-BR: BOM UTF-8, separador ';' e decimal com
 // vírgula.
 import type express from 'express';
-import { fetchInspectionBatch, type Filters } from './queries.js';
-import { STATUS_LABEL, fmtDateBR } from './labels.js';
+import { fetchInspectionBatch } from '../consultas/exportacao.js';
+import { type Filters } from '../consultas/filtros.js';
+import { STATUS_LABEL, fmtDateBR } from './rotulos.js';
 
 const BATCH = 1000;
 

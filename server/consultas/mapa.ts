@@ -12,9 +12,17 @@
 // Tolerante a banco antigo: sem as colunas pos_* (setup_completo.sql não
 // reaplicado), devolve `disponivel: false` com o aviso, e o resto do
 // dashboard segue funcionando.
-import { pool } from './db.js';
-import type { Filters } from './queries.js';
-import type { Status } from './validate.js';
+import { pool } from '../db.js';
+import type { Status } from '../validate.js';
+import { RANGE_WHERE_T, type Filters } from './filtros.js';
+
+// Luz crítica (omniroot/luz.py na máquina): a tora foi MEDIDA, mas em
+// condição de baixa confiança — o método dos indicadores de imagem termina em
+// "_luz_critica". Ela conta como tora e aparece no mapa, mas a casca e a
+// tortuosidade dela não entram nas médias que disparam alertas. `i` é o
+// apelido de indicadores_qualidade nas consultas.
+export const EM_LUZ_CRITICA = `i.metodo_medicao LIKE '%\\_luz\\_critica'`;
+export const SEM_LUZ_CRITICA = `i.metodo_medicao NOT LIKE '%\\_luz\\_critica'`;
 
 export const CELULA_M = 25; // lado da célula, em metros
 const METROS_POR_GRAU_LAT = 111_320;
@@ -147,6 +155,7 @@ export interface MapaCelula {
   tort_media: number | null; // %, só toras vistas de lado
   tort_n: number;
   diam_medio: number | null; // cm
+  luz_critica_n: number; // toras medidas em luz crítica (fora das médias de casca/tortuosidade)
   primeira: string; // data da primeira tora da célula
   ultima: string;
   niveis?: Record<Metrica, Nivel>; // cor da zona em cada indicador (calculado aqui, a tela só pinta)
@@ -166,6 +175,7 @@ export interface Mapa {
   celula_m: number;
   total: number; // toras no período (com e sem posição)
   com_posicao: number;
+  luz_critica: number; // toras com posição medidas em luz crítica (baixa confiança)
   fontes: { fonte: string; toras: number }[];
   celulas: MapaCelula[];
   pontos: MapaPonto[]; // as mais recentes, até MAX_PONTOS
@@ -176,11 +186,6 @@ export interface Mapa {
   alertas: Alerta[];
 }
 
-const RANGE_WHERE_T = `
-  t.data_inspecao >= $1::date
-  AND t.data_inspecao < $2::date + INTERVAL '1 day'
-  AND ($3::int IS NULL OR t.maquina_id = $3::int)
-`;
 const COM_POSICAO = `t.pos_lat IS NOT NULL AND t.pos_lon IS NOT NULL`;
 
 // Colunas de planilha: A..Z, AA, AB...
@@ -207,6 +212,7 @@ export async function getMapa(f: Filters): Promise<Mapa> {
     celula_m: CELULA_M,
     total: 0,
     com_posicao: 0,
+    luz_critica: 0,
     fontes: [],
     celulas: [],
     pontos: [],
@@ -246,10 +252,15 @@ export async function getMapa(f: Filters): Promise<Mapa> {
     pool.query(
       `WITH p AS (
          SELECT t.id, t.status_classificacao, t.data_inspecao, t.pos_lat AS lat, t.pos_lon AS lon,
-                MAX(i.valor) FILTER (WHERE i.tipo_indicador = 'porcentagem_casca')::float AS casca,
+                -- Casca e tortuosidade medidas em luz CRÍTICA (baixa confiança) não
+                -- entram na média da zona: ruído noturno não pode disparar "Onde agir".
+                MAX(i.valor) FILTER (WHERE i.tipo_indicador = 'porcentagem_casca'
+                                       AND ${SEM_LUZ_CRITICA})::float AS casca,
                 MAX(i.valor) FILTER (WHERE i.tipo_indicador = 'tortuosidade'
-                                       AND i.metodo_medicao LIKE 'opencv%')::float AS tort,
-                MAX(i.valor) FILTER (WHERE i.tipo_indicador = 'diametro')::float AS diam
+                                       AND i.metodo_medicao LIKE 'opencv%'
+                                       AND ${SEM_LUZ_CRITICA})::float AS tort,
+                MAX(i.valor) FILTER (WHERE i.tipo_indicador = 'diametro')::float AS diam,
+                COALESCE(BOOL_OR(${EM_LUZ_CRITICA}), false) AS luz_critica
          FROM toras_inspecionadas t
          LEFT JOIN indicadores_qualidade i ON i.tora_id = t.id
          WHERE ${RANGE_WHERE_T} AND ${COM_POSICAO}
@@ -268,6 +279,7 @@ export async function getMapa(f: Filters): Promise<Mapa> {
               AVG(casca) AS casca_media, COUNT(casca)::int AS casca_n,
               AVG(tort) AS tort_media, COUNT(tort)::int AS tort_n,
               AVG(diam) AS diam_medio,
+              COUNT(*) FILTER (WHERE luz_critica)::int AS luz_critica_n,
               to_char(MIN(data_inspecao), 'YYYY-MM-DD"T"HH24:MI:SS') AS primeira,
               to_char(MAX(data_inspecao), 'YYYY-MM-DD"T"HH24:MI:SS') AS ultima
        FROM g
@@ -313,6 +325,7 @@ export async function getMapa(f: Filters): Promise<Mapa> {
       tort_media: numOrNull(r.tort_media),
       tort_n: r.tort_n as number,
       diam_medio: numOrNull(r.diam_medio),
+      luz_critica_n: r.luz_critica_n as number,
       primeira: r.primeira as string,
       ultima: r.ultima as string,
     };
@@ -331,6 +344,7 @@ export async function getMapa(f: Filters): Promise<Mapa> {
     celula_m: CELULA_M,
     total: tot.total,
     com_posicao: tot.com_posicao,
+    luz_critica: cels.reduce((s, c) => s + c.luz_critica_n, 0),
     fontes: fontes.rows as Mapa['fontes'],
     celulas: cels,
     pontos: truncados ? pts.slice(0, MAX_PONTOS) : pts,

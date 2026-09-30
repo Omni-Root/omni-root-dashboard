@@ -1,0 +1,42 @@
+/* ---- alerta de tendência ("supervisor no bolso") ---- */
+.tendencia {
+  position: sticky;
+  top: 0;
+  z-index: 1000; /* acima dos controles do Leaflet */
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tendencia-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--status-critical);
+  border-left: 6px solid var(--status-critical);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.tendencia-icone {
+  color: var(--status-critical);
+  font-size: 18px;
+  flex: none;
+}
+
+.tendencia-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.tendencia-ciente {
+  flex: none;
+  font-size: 12px;
+  padding: 5px 10px;
+}
+

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { LiveInfo } from '../useLive';
+import type { LiveInfo } from '../hooks/useLive';
 
 function haQuanto(d: Date, agora: number): string {
   const s = Math.max(0, Math.round((agora - d.getTime()) / 1000));

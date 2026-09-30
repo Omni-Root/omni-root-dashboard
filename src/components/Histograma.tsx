@@ -1,6 +1,6 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { Faixa } from '../types';
-import { useThemeTokens } from './useThemeTokens';
+import { useThemeTokens } from '../hooks/useThemeTokens';
 
 // Histograma de UMA série (contagem de toras por faixa). Uma matiz só — é
 // magnitude, não identidade — e a matiz é a mesma rampa azul do mapa de

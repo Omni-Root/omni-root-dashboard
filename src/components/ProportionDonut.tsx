@@ -1,7 +1,7 @@
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { SummaryRow } from '../types';
 import { STATUS_META, STATUS_ORDER } from '../types';
-import { useThemeTokens } from './useThemeTokens';
+import { useThemeTokens } from '../hooks/useThemeTokens';
 
 const fmt = new Intl.NumberFormat('pt-BR');
 

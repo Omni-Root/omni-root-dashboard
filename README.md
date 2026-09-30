@@ -243,34 +243,17 @@ npm run typecheck
 
 ---
 
-## 10. Sem acesso ao banco central? Banco local de teste
+## 10. Sem acesso ao banco central? Banco local
 
-O diretório `db/dev/` sobe um PostgreSQL isolado na porta **5433**, com o schema
-real (`01_schema.sql`, cópia do repo principal) e **8.000 inspeções sintéticas**
-(`02_seed_dev.sql`).
+O banco é o do repositório principal: `docker compose up -d` lá sobe o
+PostgreSQL e aplica o `Banco de dados/setup_completo.sql` (o **único** script
+do banco: schema, seed, densidade por clone, colunas de posição e trigger de
+tempo real; idempotente). Para ter dados, rode o `main.py` (ou o
+`tests/simular_cenario.py`, sem câmera) e o `sync_daemon.py` de lá.
 
-Opção A — Docker:
-
-```bash
-cd db/dev
-docker compose up -d
-```
-
-Opção B — qualquer Postgres local vazio na porta 5433:
-
-```bash
-node db/dev/setup-devdb.mjs 5433
-```
-
-No `.env`, use `PG_PORT=5433` e senha `dev` (Docker) ou vazia (opção B).
-
-> ℹ️ O seed popula `toras_inspecionadas` (mais máquinas e talhões),
-> `clones_densidade` (`04_clones_densidade.sql`, cópia da migration do repo
-> principal) e **indicadores de qualidade sintéticos** para todas as toras
-> (`05_seed_indicadores_dev.sql`: ~60% vistas de lado, casca maior no Talhão
-> Norte, dois clones — um com faixa de densidade). `defeitos_detectados` fica
-> vazio, então o Export StanForD sai sem a tabela de defeitos. Para o formato
-> completo, aponte para o banco central com dados reais do pipeline.
+> Para testar sem mexer nos dados reais, crie um banco separado no mesmo
+> container, aplique o `setup_completo.sql` nele e aponte o dashboard com
+> `PG_DBNAME=<banco_de_teste>`.
 
 ---
 
@@ -288,9 +271,14 @@ No `.env`, use `PG_PORT=5433` e senha `dev` (Docker) ou vazia (opção B).
 | `GET /api/heatmap` | exige | + `statuses` (ex.: `reprovado,quarentena`) | Contagem por dia da semana × hora |
 | `GET /api/ultima` | exige | `maquinaId?` | Última tora recebida, com os 8 indicadores, proveniência da densidade e faixa de massa |
 | `GET /api/qualidade` | exige | `from`, `to`, `maquinaId?` | Qualidade por talhão/clone + histogramas de tortuosidade e casca |
+| `GET /api/mapa` | exige | `from`, `to`, `maquinaId?` | Mapa de qualidade: zonas de 25 m (casca, tortuosidade, rejeição), toras com posição, limites e "Onde agir" |
+| `GET /api/tendencia` | exige | `maquinaId?` | Alerta de tendência: máquina com 3+ das últimas 5 toras acima do limite (últimas 2 h) |
+| `GET /api/events` | exige | — | Tempo real (SSE): aviso de tora nova/atualizada |
+| `POST /api/camera/frame` | `STREAM_TOKEN` | JPEG no corpo | Quadro da câmera ao vivo, empurrado pela máquina |
+| `GET /api/camera/maquinas` · `GET /api/camera/stream` | exige | `maquina` | Máquinas transmitindo / vídeo MJPEG |
 | `GET /api/export/csv` | exige | `from`, `to`, `maquinaId?` | Inspeções em CSV (streaming) |
-| `GET /api/export/pdf` | exige | `from`, `to`, `maquinaId?` | Relatório-sumário em PDF |
-| `GET /api/export/stanford` | exige | `from`, `to`, `maquinaId?` | ZIP com `.hpr` StanForD 2010 |
+| `GET /api/export/pdf` | exige | `from`, `to`, `maquinaId?` | Relatório PDF (com mapa de ruas e "Onde agir") |
+| `GET /api/export/stanford` | exige | `from`, `to`, `maquinaId?` | ZIP com `.hpr` StanForD 2010 (posição em `UserDefinedData`) |
 
 Datas em `YYYY-MM-DD`, intervalo inclusivo. Tudo é validado no servidor (datas
 por regex, `maquinaId` inteiro, `bucket`/`statuses` por whitelist) e as consultas
@@ -303,35 +291,41 @@ inteira para o cliente.
 
 ```
 server/
-  index.ts            # Rotas, middleware de sessão e wiring geral
-  db.ts               # Pool do PostgreSQL (read-only por configuração)
-  queries.ts          # Todo o SQL: painéis + exportações
-  qualidade.ts        # SQL dos indicadores de qualidade (última inspeção, por talhão, histogramas)
-  validate.ts         # Validação dos parâmetros de query string
-  auth.ts             # Credenciais + cookie de sessão assinado (HMAC)
-  labels.ts           # Rótulos de status e formatação de data
-  export-csv.ts       # CSV em streaming por lotes
-  export-pdf.ts       # Relatório PDF (pdfkit)
-  export-stanford.ts  # XML StanForD 2010 (.hpr)
-  zip.ts              # Escritor de ZIP mínimo (zlib + CRC32)
+  index.ts              # Entrada: sobe o app e o tempo real
+  app.ts                # Monta o Express (middlewares, rotas, cliente em produção)
+  http.ts               # Filtros da query string e envelopes de erro (400/500)
+  rotas/                # Uma por assunto: sessao · painel · camera · exportacoes
+  consultas/            # SQL por assunto (tudo agregado no banco)
+    filtros.ts            período/máquina e os fragmentos SQL que os aplicam
+    operacao.ts           resumo, série temporal, mapa de calor, máquinas
+    qualidade.ts          última inspeção, qualidade por talhão, histogramas
+    mapa.ts               zonas de 25 m, limites e "Onde agir" (fonte única dos limites)
+    tendencia.ts          alerta de tendência por máquina
+    exportacao.ts         linhas para CSV, PDF e StanForD
+  exportacoes/          # Arquivos gerados
+    csv.ts  pdf.ts  pdf-mapa.ts (mapa com ruas)  pdf-estilo.ts  stanford.ts
+    tiles.ts (OpenStreetMap)  zip.ts  rotulos.ts
+  auth.ts · db.ts · live.ts · camera.ts · validate.ts   # Infraestrutura
 src/
-  App.tsx             # Gate de login + layout do dashboard
-  api.ts              # Cliente HTTP (sessão, dados e downloads)
-  types.ts            # Tipos e paleta de status compartilhados
-  theme.css           # Tokens de tema (claro/escuro) e estilos
-  components/
-    Login.tsx           ThemeToggle.tsx    ExportMenu.tsx
-    Filters.tsx         SummaryCards.tsx   TimeSeriesChart.tsx
-    ProportionDonut.tsx Heatmap.tsx        useThemeTokens.ts
-    UltimaInspecao.tsx  QualidadeTalhao.tsx Histograma.tsx
-db/dev/               # PostgreSQL de desenvolvimento (schema + seed sintético)
+  App.tsx               # Sessão: login ou painel
+  paginas/Painel.tsx    # Layout do painel (grade)
+  hooks/                # useDadosPainel (carga e recarga), useLive (SSE),
+                        # useAnuncioInspecao (voz), useThemeTokens
+  components/           # Um componente por painel/controle (Cabecalho, MapaQualidade,
+                        # UltimaInspecao, AlertasTendencia, AvisoConexao, NavCelular, ...)
+  estilos/              # CSS por área da tela; a ordem da cascata está em estilos/index.css
+  api.ts · types.ts · voz.ts · datas.ts
 ```
+
+A reorganização foi verificada contra a versão anterior: mesmas respostas em
+todas as rotas da API, CSV/PDF/StanForD idênticos byte a byte (com o relógio
+fixo) e a mesma tela (estrutura, texto e medidas em desktop e celular).
 
 ---
 
 ## 13. Decisões técnicas
 
-- **Schema**: o real do repo principal (`Banco de dados/schema_postgres.sql`).
+- **Schema**: o real do repo principal (`Banco de dados/setup_completo.sql`).
   Tabela `toras_inspecionadas`, com `status_classificacao` ∈ `aprovado` /
   `quarentena` / `reprovado`.
 - **Mapa de calor por dia da semana × hora**: `data_inspecao` é `TIMESTAMP` sem

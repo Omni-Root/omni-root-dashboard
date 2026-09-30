@@ -7,14 +7,9 @@
 // Estrutura baseada na documentação pública da Skogforsk (StanForD 2010). NÃO é
 // validada contra o XSD oficial — não declarar como "certificado StanForD".
 import type express from 'express';
-import {
-  getStanfordDataset,
-  type Filters,
-  type StanfordIndicador,
-  type StanfordDefeito,
-  type StanfordStem,
-} from './queries.js';
-import { STATUS_STANFORD } from './labels.js';
+import { getStanfordDataset, type StanfordIndicador, type StanfordDefeito, type StanfordStem } from '../consultas/exportacao.js';
+import { type Filters } from '../consultas/filtros.js';
+import { STATUS_STANFORD } from './rotulos.js';
 import { makeZip, type ZipEntry } from './zip.js';
 
 const NS = 'urn:skogforsk:stanford2010:HarvestedProduction:v3p0';

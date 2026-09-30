@@ -1,0 +1,57 @@
+/* ---- tabela de qualidade por talhão ---- */
+.tabela-wrap {
+  overflow-x: auto;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 760px;
+}
+
+.tabela th,
+.tabela td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--grid);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tabela th {
+  color: var(--band-text);
+  background: var(--band);
+  font-weight: 600;
+  font-size: 12px;
+  white-space: nowrap;
+  border-bottom: none;
+}
+
+.tabela thead th:first-child {
+  border-radius: 6px 0 0 0;
+}
+
+.tabela thead th:last-child {
+  border-radius: 0 6px 0 0;
+}
+
+.tabela tbody tr:nth-child(even) {
+  background: var(--tint);
+}
+
+.tabela th.num,
+.tabela td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tabela tbody tr:hover {
+  background: var(--tint-strong);
+}
+
+.tabela .muted {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+

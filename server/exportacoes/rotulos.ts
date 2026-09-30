@@ -1,5 +1,5 @@
 // Rótulos e mapeamentos de status compartilhados pelas exportações.
-import type { Status } from './validate.js';
+import type { Status } from '../validate.js';
 
 // Rótulos exibidos ao usuário (iguais aos do cliente).
 export const STATUS_LABEL: Record<Status, string> = {
