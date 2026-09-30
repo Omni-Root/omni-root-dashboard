@@ -8,6 +8,8 @@ import CameraAoVivo from './components/CameraAoVivo';
 import FiltersBar from './components/Filters';
 import Heatmap from './components/Heatmap';
 import Histograma from './components/Histograma';
+import MapaQualidade from './components/MapaQualidade';
+import AlertasTendencia from './components/AlertasTendencia';
 import QualidadeTalhao from './components/QualidadeTalhao';
 import UltimaInspecao from './components/UltimaInspecao';
 import Login from './components/Login';
@@ -17,10 +19,12 @@ import ProportionDonut from './components/ProportionDonut';
 import SummaryCards from './components/SummaryCards';
 import TimeSeriesChart from './components/TimeSeriesChart';
 import type {
+  AlertaTendencia,
   Bucket,
   Filters,
   HeatmapCell,
   Maquina,
+  Mapa,
   Qualidade,
   Status,
   SummaryRow,
@@ -92,7 +96,12 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
   const [heatmap, setHeatmap] = useState<HeatmapCell[] | null>(null);
   const [ultima, setUltima] = useState<Ultima | null>(null);
   const [qualidade, setQualidade] = useState<Qualidade | null>(null);
+  const [mapa, setMapa] = useState<Mapa | null>(null);
+  const [tendencia, setTendencia] = useState<AlertaTendencia[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Quando os painéis foram atualizados pela última vez com sucesso: sem
+  // conexão (celular no campo), os dados ficam na tela com este horário.
+  const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
   // Incrementado a cada aviso de tora nova (SSE): força o efeito de carga a
   // rodar de novo com os mesmos filtros, sem F5.
   const [versao, setVersao] = useState(0);
@@ -163,14 +172,37 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
       api.heatmap(filters, heatStatuses, ac.signal),
       api.ultima(filters, ac.signal),
       api.qualidade(filters, ac.signal),
+      // Painel novo não derruba os outros: se só o mapa falhar, ele mostra o
+      // aviso no próprio painel e o resto do dashboard carrega normalmente.
+      api.mapa(filters, ac.signal).catch((err: unknown): Mapa => {
+        if (err instanceof UnauthorizedError || ac.signal.aborted) throw err;
+        return {
+          disponivel: false,
+          aviso: `Não foi possível carregar o mapa (${err instanceof Error ? err.message : 'erro'}).`,
+          celula_m: 25,
+          total: 0,
+          com_posicao: 0,
+          fontes: [],
+          celulas: [],
+          pontos: [],
+          pontos_truncados: false,
+          ultima: null,
+          // Não usados com disponivel=false (o painel só mostra o aviso).
+          limites: { casca: [0, 0], tort: [0, 0], falhas: [0, 0] },
+          min_toras_alerta: 0,
+          alertas: [],
+        };
+      }),
     ])
-      .then(([s, t, h, u, q]) => {
+      .then(([s, t, h, u, q, m]) => {
         setSummary(s);
         setTimeseries(t);
         setHeatmap(h);
         setUltima(u);
         setQualidade(q);
+        setMapa(m);
         setError(null);
+        setAtualizadoEm(new Date());
       })
       .catch((err: unknown) => {
         if (ac.signal.aborted) return;
@@ -182,6 +214,26 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
       });
     return () => ac.abort();
   }, [filters, bucket, heatStatuses, onLogout, versao]);
+
+  // Alerta de tendência: recarrega a cada tora nova (SSE) E a cada 30 s — a
+  // janela de "agora" anda com o relógio, e um alerta antigo precisa sumir
+  // sozinho mesmo sem tora nova. Falha aqui não derruba nada: fica o último.
+  useEffect(() => {
+    const ac = new AbortController();
+    const carregar = () =>
+      api
+        .tendencia(filters, ac.signal)
+        .then(setTendencia)
+        .catch((err: unknown) => {
+          if (err instanceof UnauthorizedError) onLogout();
+        });
+    void carregar();
+    const t = setInterval(carregar, 30_000);
+    return () => {
+      clearInterval(t);
+      ac.abort();
+    };
+  }, [filters, onLogout, versao]);
 
   const loading = summary === null && !error;
 
@@ -230,10 +282,23 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
         </div>
       </header>
 
+      <AlertasTendencia alertas={tendencia} falar={(t) => voz.falar(t)} />
       <FiltersBar filters={filters} maquinas={maquinas} onChange={setFilters} />
       <Narrador texto={voz.ultimoTexto} />
 
-      {error && (
+      {error && summary && (
+        // Já havia dados: eles FICAM na tela (celular no campo perde sinal o
+        // tempo todo) — só avisa de quando são.
+        <div className="error-banner" role="status">
+          <strong>Sem conexão com o banco central.</strong> Mostrando os últimos dados recebidos
+          {atualizadoEm && ` (${atualizadoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })})`}.
+          <span className="error-retry">
+            {' '}
+            Tentando de novo a cada 5 s{tentativas > 0 ? ` (${tentativas}× sem resposta)` : ''}.
+          </span>
+        </div>
+      )}
+      {error && !summary && (
         <div className="error-banner" role="status">
           <strong>Não foi possível carregar os dados.</strong> {error} — verifique a
           conexão com o PostgreSQL central (variáveis PG_* no .env).
@@ -247,7 +312,7 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
 
       {loading && !error && <div className="loading">Carregando…</div>}
 
-      {summary && !error && (
+      {summary && (
         <div className="grid">
           <section className="panel panel-camera third">
             <h2>Câmera ao vivo</h2>
@@ -255,7 +320,7 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
             <CameraAoVivo maquinas={maquinas} filtroMaquinaId={filters.maquinaId} />
           </section>
 
-          <section className="panel panel-ultima two-thirds">
+          <section className="panel panel-ultima two-thirds" id="agora">
             <div className="panel-controls">
               <div>
                 <h2>Última inspeção recebida do campo</h2>
@@ -276,7 +341,7 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
             <UltimaInspecao u={ultima} />
           </section>
 
-          <div className="cards-wrap">
+          <div className="cards-wrap" id="resumo">
             <div className="cards-head">
               <span className="cards-titulo">Resumo do período</span>
               <button
@@ -292,13 +357,22 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
             <SummaryCards rows={summary} />
           </div>
 
-          <section className="panel">
+          <section className="panel" id="qualidade">
             <h2>Qualidade da madeira por talhão e clone</h2>
             <p className="panel-sub">
               Casca residual, tortuosidade, volume e massa seca prevista — com a proveniência da
               densidade que gera a massa
             </p>
             <QualidadeTalhao rows={qualidade?.porTalhao ?? []} />
+          </section>
+
+          <section className="panel panel-mapa" id="mapa">
+            <h2>Mapa de qualidade</h2>
+            <p className="panel-sub">
+              Onde está a casca alta, a madeira torta e a rejeição — cada tora na posição da máquina
+              no corte (GNSS), agrupada por zona. Funciona sem internet; o mapa de ruas é opcional.
+            </p>
+            <MapaQualidade mapa={mapa} />
           </section>
 
           <section className="panel third">
@@ -363,6 +437,17 @@ function Dashboard({ user, onLogout }: { user: string; onLogout: () => void }) {
             />
           </section>
         </div>
+      )}
+
+      {/* Navegação do celular (só aparece em tela estreita, ver .nav-celular):
+          o supervisor no campo vai direto ao que interessa com o polegar. */}
+      {summary && (
+        <nav className="nav-celular" aria-label="Seções">
+          <a href="#agora">Agora</a>
+          <a href="#mapa">Onde agir</a>
+          <a href="#qualidade">Qualidade</a>
+          <a href="#resumo">Resumo</a>
+        </nav>
       )}
     </div>
   );

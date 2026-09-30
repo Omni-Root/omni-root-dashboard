@@ -1,4 +1,5 @@
 import { pool } from './db.js';
+import { temColunasPosicao } from './mapa.js';
 import type { Bucket, Status } from './validate.js';
 
 // Todas as consultas são parametrizadas e agregam NO BANCO — nunca trazem a
@@ -260,6 +261,13 @@ export interface StanfordStem {
   hash_sha256: string;
   talhao_nome: string | null;
   talhao_especie: string | null;
+  // Posição da máquina no corte (null = sem posição ou banco sem as colunas)
+  pos_lat: number | null;
+  pos_lon: number | null;
+  pos_fonte: string | null;
+  pos_hdop: number | null;
+  pos_satelites: number | null;
+  pos_precisao_m: number | null;
 }
 export interface StanfordIndicador {
   tora_id: number;
@@ -286,6 +294,11 @@ export interface StanfordDataset {
 
 export async function getStanfordDataset(f: Filters): Promise<StanfordDataset> {
   const args = [f.from, f.to, f.maquinaId];
+  // Banco sem as colunas de posição (setup_completo.sql antigo): exporta sem.
+  const posicao = (await temColunasPosicao())
+    ? `t.pos_lat, t.pos_lon, t.pos_fonte, t.pos_hdop, t.pos_satelites, t.pos_precisao_m`
+    : `NULL::float AS pos_lat, NULL::float AS pos_lon, NULL::text AS pos_fonte,
+       NULL::float AS pos_hdop, NULL::int AS pos_satelites, NULL::float AS pos_precisao_m`;
   const [machines, stems, indic, defs] = await Promise.all([
     pool.query(
       `SELECT DISTINCT m.id_maquina AS id, m.modelo, m.numero_serie
@@ -298,7 +311,8 @@ export async function getStanfordDataset(f: Filters): Promise<StanfordDataset> {
       `SELECT t.id, t.uuid_local, t.maquina_id, t.log_id,
               to_char(t.data_inspecao,'YYYY-MM-DD"T"HH24:MI:SS') AS data,
               t.confianca_ia::float AS confianca, t.status_classificacao AS status,
-              t.hash_sha256, tal.nome AS talhao_nome, tal.especie AS talhao_especie
+              t.hash_sha256, tal.nome AS talhao_nome, tal.especie AS talhao_especie,
+              ${posicao}
        FROM toras_inspecionadas t LEFT JOIN talhoes tal ON tal.id_talhao = t.talhao_id
        WHERE ${RANGE_WHERE_T}
        ORDER BY t.maquina_id, t.id`,

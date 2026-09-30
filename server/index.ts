@@ -18,6 +18,8 @@ import { streamPdf } from './export-pdf.js';
 import { streamStanford } from './export-stanford.js';
 import { iniciarTempoReal, rotaEventos } from './live.js';
 import { getQualidade, getUltimaInspecao } from './qualidade.js';
+import { getMapa } from './mapa.js';
+import { getTendencia } from './tendencia.js';
 import { cameraLigada, listarCameras, receberQuadro, streamCamera } from './camera.js';
 
 // Rede de segurança: um erro fora de um handler (promessa sem catch, evento
@@ -126,6 +128,11 @@ app.get('/api/heatmap', requireAuth, route((req) =>
 // Última inspeção: só filtro de máquina (é o cartão ao vivo, independe do período).
 app.get('/api/ultima', requireAuth, route((req) => getUltimaInspecao(parseMaquinaId(req.query.maquinaId))));
 app.get('/api/qualidade', requireAuth, route((req) => getQualidade(filtersFrom(req))));
+// Mapa de qualidade: toras com posição (GNSS) agregadas em células de ~25 m.
+app.get('/api/mapa', requireAuth, route((req) => getMapa(filtersFrom(req))));
+// Alerta de tendência (várias toras seguidas acima do limite na mesma máquina):
+// como a "última inspeção", independe do período — é o agora; só filtra máquina.
+app.get('/api/tendencia', requireAuth, route((req) => getTendencia(parseMaquinaId(req.query.maquinaId))));
 
 // ---- Tempo real (exige sessão): SSE com avisos de tora nova ----
 app.get('/api/events', requireAuth, rotaEventos);

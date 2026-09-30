@@ -1,5 +1,5 @@
 import type { UltimaInspecao as Ultima } from '../types';
-import { STATUS_META, TIPO_DADO_META } from '../types';
+import { FONTE_POSICAO_META, STATUS_META, TIPO_DADO_META } from '../types';
 
 // Cartão "última inspeção": a tora mais recente que chegou do campo, com os
 // indicadores que o desafio pede (diâmetro, casca, tortuosidade, densidade,
@@ -107,9 +107,41 @@ export default function UltimaInspecao({ u }: { u: Ultima | null }) {
         <span title="Estimado a partir de referência de densidade do clone" className="estimado-legenda">
           ▨ estimado
         </span>
+        <Posicao u={u} />
         <span className="ultima-log">{u.log_id}</span>
       </div>
     </div>
+  );
+}
+
+// Posição da máquina no corte, com a proveniência (GNSS x trilha gravada) —
+// sem posição, diz isso em vez de esconder.
+function Posicao({ u }: { u: Ultima }) {
+  const p = u.posicao;
+  if (!p) {
+    return (
+      <span className="ultima-pos muted" title="A máquina gravou esta tora sem posição (sem GNSS ou sem sinal)">
+        sem posição
+      </span>
+    );
+  }
+  const meta = p.fonte ? FONTE_POSICAO_META[p.fonte] : undefined;
+  const precisao = [
+    p.precisao_m != null ? `±${Math.round(p.precisao_m)} m` : null,
+    p.hdop != null ? `HDOP ${p.hdop.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}` : null,
+    p.satelites != null ? `${p.satelites} satélites` : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
+  return (
+    <span
+      className="ultima-pos"
+      title={`${meta?.hint ?? 'Posição da máquina no corte'}${precisao ? ` — ${precisao}` : ''}`}
+    >
+      {p.lat.toFixed(5)}, {p.lon.toFixed(5)}
+      {p.precisao_m != null && ` ±${Math.round(p.precisao_m)} m`}
+      <span className={`tile-tag${p.fonte === 'gnss_log' ? ' tag-demo' : ''}`}>{meta?.label ?? p.fonte ?? 'GNSS'}</span>
+    </span>
   );
 }
 

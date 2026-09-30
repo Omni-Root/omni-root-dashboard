@@ -1,9 +1,11 @@
 import type {
+  AlertaTendencia,
   Bucket,
   CameraEstado,
   Filters,
   HeatmapCell,
   Maquina,
+  Mapa,
   Qualidade,
   SummaryRow,
   TimeseriesPoint,
@@ -122,6 +124,9 @@ export const api = {
     fetchJson<UltimaInspecao | null>('/api/ultima', { maquinaId: f.maquinaId }, signal),
   qualidade: (f: Filters, signal?: AbortSignal) =>
     fetchJson<Qualidade>('/api/qualidade', filterParams(f), signal),
+  mapa: (f: Filters, signal?: AbortSignal) => fetchJson<Mapa>('/api/mapa', filterParams(f), signal),
+  tendencia: (f: Filters, signal?: AbortSignal) =>
+    fetchJson<AlertaTendencia[]>('/api/tendencia', { maquinaId: f.maquinaId }, signal),
 
   // ---- câmera ao vivo ----
   camera: (signal?: AbortSignal) => fetchJson<CameraEstado>('/api/camera/maquinas', {}, signal),

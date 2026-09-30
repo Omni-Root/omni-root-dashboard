@@ -15,6 +15,13 @@ export const STATUS_STANFORD: Record<Status, { code: number; text: string }> = {
   reprovado: { code: 3, text: 'REJEITADO' },
 };
 
+// De onde veio a posição da tora (pos_fonte) — mesma proveniência do cliente.
+export const FONTE_POSICAO_LABEL: Record<string, string> = {
+  gnss_serial: 'GNSS (receptor / GNSS da máquina)',
+  gnss_log: 'trilha GNSS gravada e reproduzida (demonstração)',
+  windows_localizacao: 'Localização do Windows (notebook da maquete, via Wi-Fi)',
+};
+
 // 0 = domingo ... 6 = sábado (convenção do EXTRACT(DOW) do Postgres).
 export const DOW_LABEL = [
   'Domingo',

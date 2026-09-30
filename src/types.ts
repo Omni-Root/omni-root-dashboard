@@ -77,6 +77,103 @@ export interface UltimaInspecao {
   saude_pct: number | null;
   defeitos: number;
   defeitos_tipos: string[];
+  posicao: PosicaoTora | null;
+}
+
+// ---- Posição / mapa de qualidade ----
+export interface PosicaoTora {
+  lat: number;
+  lon: number;
+  fonte: string | null;
+  hdop: number | null;
+  satelites: number | null;
+  precisao_m: number | null;
+}
+
+// De onde veio a posição — declarado na tela, como a proveniência da densidade.
+export const FONTE_POSICAO_META: Record<string, { label: string; hint: string }> = {
+  gnss_serial: {
+    label: 'GNSS',
+    hint: 'Receptor GNSS em porta serial (NMEA): o GNSS da máquina ou um receptor USB',
+  },
+  gnss_log: {
+    label: 'Trilha gravada',
+    hint: 'Trilha GNSS real gravada antes e reproduzida pelo mesmo código (demonstração)',
+  },
+  windows_localizacao: {
+    label: 'Localização do Windows',
+    hint: 'Notebook da maquete no papel da máquina: posição estimada pelo Windows via Wi-Fi (precisão de dezenas de metros, informada pelo próprio Windows)',
+  },
+};
+
+export interface MapaCelula {
+  zona: string;
+  lat_min: number;
+  lat_max: number;
+  lon_min: number;
+  lon_max: number;
+  toras: number;
+  falhas: number;
+  casca_media: number | null;
+  casca_n: number;
+  tort_media: number | null;
+  tort_n: number;
+  diam_medio: number | null;
+  primeira: string;
+  ultima: string;
+  niveis?: Record<Metrica, Nivel>;
+}
+
+export type Metrica = 'casca' | 'tort' | 'falhas';
+export type Nivel = 'ok' | 'atencao' | 'critico' | 'sem';
+
+// "Onde agir" — calculado no servidor (mesma regra do PDF).
+export interface AlertaZona {
+  zona: string;
+  metrica: Metrica;
+  nivel: 'atencao' | 'critico';
+  valor: number;
+  n: number;
+  limite: number;
+  curto: string;
+  acao: string;
+}
+
+// Alerta de tendência: várias toras seguidas acima do limite na mesma máquina.
+export interface AlertaTendencia {
+  chave: string;
+  maquina: string | null;
+  metrica: Metrica;
+  acima: number;
+  de: number;
+  media: number | null;
+  limite: number;
+  ultima: string;
+  texto: string;
+}
+
+export interface MapaPonto {
+  id: number;
+  lat: number;
+  lon: number;
+  status: Status;
+  data: string;
+}
+
+export interface Mapa {
+  disponivel: boolean;
+  aviso: string | null;
+  celula_m: number;
+  total: number;
+  com_posicao: number;
+  fontes: { fonte: string; toras: number }[];
+  celulas: MapaCelula[];
+  pontos: MapaPonto[];
+  pontos_truncados: boolean;
+  ultima: MapaPonto | null;
+  limites: Record<Metrica, [number, number]>;
+  min_toras_alerta: number;
+  alertas: AlertaZona[];
 }
 
 export interface QualidadeTalhao {

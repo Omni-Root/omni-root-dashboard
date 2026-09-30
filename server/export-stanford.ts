@@ -119,6 +119,32 @@ function stemXml(
   });
   parts.push('          </DataTable>');
 
+  // Posição da máquina no corte (WGS84, graus decimais) — tabela própria no
+  // mecanismo de dados livres. NÃO usamos um elemento nativo de coordenada do
+  // StanForD porque não conferimos o nome/formato dele contra o XSD oficial.
+  if (stem.pos_lat != null && stem.pos_lon != null) {
+    parts.push('          <DataTable>');
+    parts.push('            <DataTableKey>4</DataTableKey>');
+    parts.push('            <DataTableName>PosicaoMaquina</DataTableName>');
+    const posCols: [string, string][] = [
+      ['latitude_wgs84', Number(stem.pos_lat).toFixed(7)],
+      ['longitude_wgs84', Number(stem.pos_lon).toFixed(7)],
+      ['referencia', 'posicao da maquina no corte; arvore no alcance da grua'],
+      ['fonte', stem.pos_fonte ?? ''],
+    ];
+    if (stem.pos_hdop != null) posCols.push(['hdop', Number(stem.pos_hdop).toFixed(1)]);
+    if (stem.pos_satelites != null) posCols.push(['satelites', String(stem.pos_satelites)]);
+    if (stem.pos_precisao_m != null) posCols.push(['precisao_m', Number(stem.pos_precisao_m).toFixed(1)]);
+    posCols.forEach(([name, val], i) => {
+      parts.push(
+        `            <Row><RowKey>${i + 1}</RowKey>` +
+          `<ColumnName>${esc(name)}</ColumnName>` +
+          `<ColumnData>${esc(val)}</ColumnData></Row>`,
+      );
+    });
+    parts.push('          </DataTable>');
+  }
+
   // Todos os indicadores medidos.
   if (inds.length > 0) {
     parts.push('          <DataTable>');

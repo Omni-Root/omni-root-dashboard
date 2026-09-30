@@ -7,6 +7,7 @@
 // Fica num módulo separado de queries.ts de propósito: são painéis novos, com
 // SQL próprio, e assim não misturam com as consultas de operação.
 import { pool } from './db.js';
+import { getPosicaoTora, type PosicaoTora } from './mapa.js';
 import type { Filters } from './queries.js';
 import type { Status } from './validate.js';
 
@@ -87,6 +88,7 @@ export interface UltimaInspecao {
   saude_pct: number | null;
   defeitos: number;
   defeitos_tipos: string[];
+  posicao: PosicaoTora | null; // posição da máquina no corte (GNSS); null = sem posição
 }
 
 async function buscarClone(cloneId: string | null): Promise<Omit<DensidadeInfo, 'valor' | 'clone'>> {
@@ -120,7 +122,7 @@ export async function getUltimaInspecao(maquinaId: number | null): Promise<Ultim
   if (rows.length === 0) return null;
   const t = rows[0] as Pick<UltimaInspecao, 'id' | 'data' | 'status' | 'confianca' | 'log_id' | 'maquina_modelo' | 'maquina_serie' | 'talhao_nome'>;
 
-  const [ind, def] = await Promise.all([
+  const [ind, def, posicao] = await Promise.all([
     pool.query(
       `SELECT tipo_indicador, valor::float AS valor, metodo_medicao
        FROM indicadores_qualidade WHERE tora_id = $1`,
@@ -131,6 +133,7 @@ export async function getUltimaInspecao(maquinaId: number | null): Promise<Ultim
        WHERE tora_id = $1 GROUP BY 1 ORDER BY n DESC`,
       [t.id],
     ),
+    getPosicaoTora(t.id),
   ]);
 
   const por = new Map<string, { valor: number; metodo: string }>();
@@ -170,6 +173,7 @@ export async function getUltimaInspecao(maquinaId: number | null): Promise<Ultim
     saude_pct: v('apodrecimento_pragas'),
     defeitos: (def.rows as { n: number }[]).reduce((a, r) => a + r.n, 0),
     defeitos_tipos: (def.rows as { tipo_defeito: string }[]).map((r) => r.tipo_defeito),
+    posicao,
   };
 }
 

@@ -3,3 +3,4 @@ dist/
 .env
 *.local
 uploads/
+.claude/

@@ -1314,3 +1314,400 @@ body {
 .panel-opcoes .chk input {
   accent-color: var(--accent);
 }
+
+/* ---- mapa de qualidade ---- */
+.mapa .muted,
+.ultima-pos.muted {
+  color: var(--text-muted);
+}
+
+.mapa-controles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.mapa-metricas {
+  display: inline-flex;
+  border: 1px solid var(--axis);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mapa-metricas .seg {
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 0;
+  border-right: 1px solid var(--axis);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.mapa-metricas .seg:last-child {
+  border-right: 0;
+}
+
+.mapa-metricas .seg-ativo {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+}
+
+.mapa-opcoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mapa-opcoes select {
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-primary);
+  background: var(--page);
+  border: 1px solid var(--axis);
+  border-radius: 6px;
+  padding: 5px 6px;
+}
+
+.mapa-opcoes .btn {
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+.mapa-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+@media (min-width: 900px) {
+  .mapa-layout {
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+  }
+}
+
+.mapa-area {
+  position: relative;
+  min-width: 0;
+}
+
+.mapa-leaflet {
+  height: 420px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  /* Sem mapa de fundo (offline), é este o "chão" do mapa. */
+  background: var(--tint);
+  z-index: 0;
+}
+
+.mapa-leaflet .leaflet-tooltip {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.mapa-aviso-fundo {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  max-width: calc(100% - 120px);
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--status-warning);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.mapa-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.mapa-legenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mapa-legenda .sw {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.sw-ok {
+  background: var(--status-good);
+}
+.sw-atencao {
+  background: var(--status-warning);
+}
+.sw-critico {
+  background: var(--status-critical);
+}
+.sw-sem {
+  border: 1px dashed var(--text-muted);
+}
+
+.mapa-alertas h3 {
+  font-size: 13px;
+  margin: 0 0 8px;
+  color: var(--text-primary);
+}
+
+.mapa-alertas ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.mapa-alertas p {
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
+.alerta {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  background: var(--tint);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--text-muted);
+  border-radius: 6px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.alerta:hover {
+  background: var(--tint-strong);
+}
+
+.alerta-critico {
+  border-left-color: var(--status-critical);
+}
+
+.alerta-atencao {
+  border-left-color: var(--status-warning);
+}
+
+.alerta-zona {
+  font-weight: 700;
+}
+
+.alerta-texto {
+  color: var(--text-secondary);
+}
+
+.alerta-texto strong {
+  color: var(--text-primary);
+}
+
+.mapa-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tile-tag.tag-demo {
+  color: var(--status-warning);
+  border-color: var(--status-warning);
+}
+
+.ultima-pos {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A última tora pulsa no mapa: é onde a máquina está agora. */
+.mapa-ultima {
+  animation: mapa-pulso 1.6s ease-in-out infinite;
+}
+
+@keyframes mapa-pulso {
+  0%,
+  100% {
+    stroke-opacity: 1;
+  }
+  50% {
+    stroke-opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mapa-ultima {
+    animation: none;
+  }
+}
+
+/* Pular para uma seção (#mapa etc.) não pode esconder o título atrás do
+   alerta fixo no topo. No celular o alerta não é fixo (ver abaixo). */
+.panel,
+.cards-wrap {
+  scroll-margin-top: 90px;
+}
+
+/* ---- alerta de tendência ("supervisor no bolso") ---- */
+.tendencia {
+  position: sticky;
+  top: 0;
+  z-index: 1000; /* acima dos controles do Leaflet */
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tendencia-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--status-critical);
+  border-left: 6px solid var(--status-critical);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.tendencia-icone {
+  color: var(--status-critical);
+  font-size: 18px;
+  flex: none;
+}
+
+.tendencia-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.tendencia-ciente {
+  flex: none;
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+/* ---- celular ---- */
+.nav-celular {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .layout {
+    padding-left: 12px;
+    padding-right: 12px;
+    /* espaço para a barra de navegação fixa no rodapé */
+    padding-bottom: 76px;
+  }
+
+  .header h1 {
+    font-size: 17px;
+  }
+
+  .header .subtitle {
+    display: none;
+  }
+
+  /* No celular, o que importa primeiro é a última tora (o "agora"); a
+     câmera ao vivo desce. */
+  .panel-ultima {
+    order: -1;
+  }
+
+  /* Fixo no topo, o alerta cobria o título da seção ao usar a barra de
+     navegação. No celular ele fica no topo da página; quem avisa de alerta
+     novo é a vibração e a voz. */
+  .tendencia {
+    position: static;
+  }
+
+  .panel {
+    padding: 12px;
+  }
+
+  .mapa-leaflet {
+    height: 320px;
+  }
+
+  .mapa-controles {
+    align-items: stretch;
+  }
+
+  .mapa-metricas {
+    width: 100%;
+  }
+
+  .mapa-metricas .seg {
+    flex: 1;
+    padding: 9px 6px; /* alvo de toque maior */
+  }
+
+  .mapa-opcoes {
+    width: 100%;
+  }
+
+  .mapa-opcoes select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mapa-rodape {
+    flex-direction: column;
+  }
+
+  /* As âncoras da barra não podem esconder o título atrás do alerta fixo. */
+  .panel,
+  .cards-wrap {
+    scroll-margin-top: 12px;
+  }
+
+  .nav-celular {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    background: var(--band);
+    border-top: 3px solid var(--jd-yellow);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nav-celular a {
+    flex: 1;
+    text-align: center;
+    padding: 13px 4px;
+    color: var(--band-text);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .nav-celular a:active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
