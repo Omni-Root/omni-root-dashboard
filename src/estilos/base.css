@@ -7,7 +7,7 @@ body {
   background: var(--page);
   color: var(--text-primary);
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  font-size: 14px;
+  font-size: calc(14px * var(--escala-texto));
   line-height: 1.45;
 }
 

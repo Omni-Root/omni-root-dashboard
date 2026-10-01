@@ -19,7 +19,7 @@
 
 .camera-head select {
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-primary);
   background: var(--page);
   border: 1px solid var(--axis);
@@ -28,7 +28,7 @@
 }
 
 .camera-serie {
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
@@ -71,11 +71,11 @@
 }
 
 .camera-overlay strong {
-  font-size: 16px;
+  font-size: calc(16px * var(--escala-texto));
 }
 
 .camera-overlay span {
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   max-width: 34ch;
 }
 
@@ -84,7 +84,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 14px;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-secondary);
 }
 
@@ -107,7 +107,7 @@
 }
 
 .camera-empty code {
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   background: var(--tint-strong);
   padding: 1px 5px;
   border-radius: 4px;
@@ -116,7 +116,7 @@
 /* ---- dica curta acima de um gráfico (ex.: série temporal com 1 bucket) ---- */
 .chart-hint {
   margin: 0 0 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-muted);
 }
 

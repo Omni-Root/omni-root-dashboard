@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { AlertaZona, Mapa, MapaCelula, MapaPonto, Metrica, Nivel } from '../types';
@@ -63,6 +63,135 @@ function agruparPorZona(alertas: AlertaZona[]): { zona: string; nivel: 'atencao'
 }
 
 type StatusFundo = 'carregando' | 'ok' | 'falhou';
+type GrupoZona = ReturnType<typeof agruparPorZona>[number];
+
+// "Onde agir" em PÁGINAS, da altura do mapa ao lado: a lista nunca estica o
+// painel. Cada página leva quantos cartões couberem inteiros — recalculado
+// quando muda a janela, o tamanho do texto (A−/A+) ou os dados. Os cartões
+// ficam todos montados (para medir) e a lista sobe até o início da página;
+// os de fora da página ficam invisíveis (e fora do Tab).
+function OndeAgir({
+  zonas,
+  minToras,
+  onFocar,
+}: {
+  zonas: GrupoZona[];
+  minToras: number;
+  onFocar: (g: GrupoZona) => void;
+}) {
+  const caixaRef = useRef<HTMLDivElement>(null);
+  const listaRef = useRef<HTMLUListElement>(null);
+  const [inicios, setInicios] = useState<number[]>([0]); // índice do 1º cartão de cada página
+  const [pagina, setPagina] = useState(0);
+
+  useLayoutEffect(() => {
+    const caixa = caixaRef.current;
+    const lista = listaRef.current;
+    if (!caixa || !lista) return;
+    const paginar = () => {
+      const altura = caixa.clientHeight;
+      const itens = Array.from(lista.children) as HTMLElement[];
+      const novos = [0];
+      let topo = itens[0]?.offsetTop ?? 0;
+      itens.forEach((li, i) => {
+        if (i > 0 && li.offsetTop + li.offsetHeight - topo > altura) {
+          novos.push(i);
+          topo = li.offsetTop;
+        }
+      });
+      setInicios((v) => (v.length === novos.length && v.every((x, i) => x === novos[i]) ? v : novos));
+    };
+    paginar();
+    const obs = new ResizeObserver(paginar);
+    obs.observe(caixa);
+    obs.observe(lista);
+    return () => obs.disconnect();
+  }, [zonas]);
+
+  // Dados novos (sync ao vivo) não jogam o apresentador de volta à página 1;
+  // só não deixam a página atual passar do fim.
+  const pag = Math.min(pagina, inicios.length - 1);
+  const de = inicios[pag];
+  const ate = inicios[pag + 1] ?? zonas.length;
+
+  // Desloca a LISTA (não rola a caixa): rolar não passa do fim do conteúdo,
+  // e a última página, com poucos cartões, ficava grudada embaixo.
+  useLayoutEffect(() => {
+    const lista = listaRef.current;
+    const li = lista?.children[de] as HTMLElement | undefined;
+    if (lista) lista.style.transform = li && li.offsetTop > 0 ? `translateY(-${li.offsetTop}px)` : '';
+  }, [de, inicios]);
+
+  const paginas = inicios.length;
+  return (
+    <aside className="mapa-alertas">
+      <div className="mapa-alertas-topo">
+        <h3>Onde agir</h3>
+        {paginas > 1 && (
+          <div className="paginador" role="group" aria-label="Páginas de zonas">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setPagina(pag - 1)}
+              disabled={pag === 0}
+              aria-label="Página anterior"
+            >
+              ‹
+            </button>
+            <span aria-live="polite">
+              {pag + 1}/{paginas}
+            </span>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setPagina(pag + 1)}
+              disabled={pag === paginas - 1}
+              aria-label="Próxima página"
+            >
+              ›
+            </button>
+          </div>
+        )}
+      </div>
+      {zonas.length === 0 ? (
+        <p className="muted">Nenhuma zona acima dos limites no período (mín. {minToras} toras por zona).</p>
+      ) : (
+        <>
+          <div className="mapa-alertas-caixa" ref={caixaRef}>
+            <ul ref={listaRef}>
+              {zonas.map((g, i) => {
+                const visivel = i >= de && i < ate;
+                return (
+                  <li key={g.zona} className={visivel ? undefined : 'fora-da-pagina'} aria-hidden={!visivel}>
+                    <button
+                      type="button"
+                      className={`alerta alerta-${g.nivel}`}
+                      onClick={() => onFocar(g)}
+                      title="Mostrar no mapa"
+                    >
+                      <span className="alerta-zona">Zona {g.zona}</span>
+                      {g.itens.map((a) => (
+                        <span className="alerta-texto" key={a.metrica}>
+                          {a.curto} <strong>{fmt(a.valor, a.metrica === 'falhas' ? 0 : 1)}%</strong> em {nRotulo(a)}{' '}
+                          (limite {a.limite}%): {a.acao}.
+                        </span>
+                      ))}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          {paginas > 1 && (
+            <p className="muted mapa-alertas-conta">
+              Zonas {de + 1}–{ate} de {zonas.length}
+            </p>
+          )}
+        </>
+      )}
+    </aside>
+  );
+}
 
 export default function MapaQualidade({ mapa }: { mapa: Mapa | null }) {
   const [metrica, setMetrica] = useState<Metrica>('casca');
@@ -164,39 +293,14 @@ export default function MapaQualidade({ mapa }: { mapa: Mapa | null }) {
           </div>
         </div>
 
-        <aside className="mapa-alertas">
-          <h3>Onde agir</h3>
-          {zonasAlerta.length === 0 ? (
-            <p className="muted">
-              Nenhuma zona acima dos limites no período (mín. {mapa.min_toras_alerta} toras por zona).
-            </p>
-          ) : (
-            <ul>
-              {zonasAlerta.slice(0, 6).map((g) => (
-                <li key={g.zona}>
-                  <button
-                    type="button"
-                    className={`alerta alerta-${g.nivel}`}
-                    onClick={() => {
-                      setMetrica(g.itens[0].metrica);
-                      setFoco({ zona: g.zona, nonce: Date.now() });
-                    }}
-                    title="Mostrar no mapa"
-                  >
-                    <span className="alerta-zona">Zona {g.zona}</span>
-                    {g.itens.map((a) => (
-                      <span className="alerta-texto" key={a.metrica}>
-                        {a.curto} <strong>{fmt(a.valor, a.metrica === 'falhas' ? 0 : 1)}%</strong> em {nRotulo(a)} (limite{' '}
-                        {a.limite}%): {a.acao}.
-                      </span>
-                    ))}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {zonasAlerta.length > 6 && <p className="muted">+ {zonasAlerta.length - 6} zonas acima do limite.</p>}
-        </aside>
+        <OndeAgir
+          zonas={zonasAlerta}
+          minToras={mapa.min_toras_alerta}
+          onFocar={(g) => {
+            setMetrica(g.itens[0].metrica);
+            setFoco({ zona: g.zona, nonce: Date.now() });
+          }}
+        />
       </div>
 
       <div className="mapa-rodape">

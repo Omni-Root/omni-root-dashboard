@@ -8,6 +8,10 @@
    ============================================================ */
 :root {
   color-scheme: light;
+  /* Tamanho do texto (A− / A+ no cabeçalho, teclas + − 0): toda font-size
+     dos estilos é "Npx × escala". 1 = padrão. Só o texto cresce — a grade,
+     o mapa e os gráficos mantêm o layout (o zoom do navegador quebraria). */
+  --escala-texto: 1;
   /* marca */
   --jd-green: #367c2b;
   --jd-green-dark: #2a5f22;

@@ -1,6 +1,6 @@
 /* ---- narração (texto para voz) ---- */
 .btn-ler {
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   padding: 5px 10px;
   white-space: nowrap;
 }
@@ -17,7 +17,7 @@
   width: 34px;
   padding-left: 0;
   padding-right: 0;
-  font-size: 15px;
+  font-size: calc(15px * var(--escala-texto));
   line-height: 1;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
@@ -25,7 +25,7 @@
 
 .voz-split .voz-caret {
   padding: 7px 7px;
-  font-size: 11px;
+  font-size: calc(11px * var(--escala-texto));
   border-left: 0;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
@@ -72,13 +72,13 @@
 }
 
 .voz-titulo {
-  font-size: 13px;
+  font-size: calc(13px * var(--escala-texto));
   font-weight: 700;
 }
 
 .voz-sub {
   margin: -4px 0 0;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-muted);
 }
 
@@ -91,7 +91,7 @@
 }
 
 .voz-grupo legend {
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   font-weight: 600;
   color: var(--text-secondary);
   padding: 0;
@@ -102,7 +102,7 @@
   display: flex;
   gap: 8px;
   align-items: flex-start;
-  font-size: 13px;
+  font-size: calc(13px * var(--escala-texto));
   cursor: pointer;
 }
 
@@ -113,14 +113,14 @@
 
 .voz-opcao small {
   display: block;
-  font-size: 11px;
+  font-size: calc(11px * var(--escala-texto));
   color: var(--text-muted);
 }
 
 .voz-campo {
   display: grid;
   gap: 4px;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-secondary);
 }
 
@@ -128,7 +128,7 @@
 .voz-campo input[type='range'] {
   width: 100%;
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-primary);
   background: var(--page);
   border: 1px solid var(--axis);

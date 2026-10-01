@@ -14,4 +14,5 @@
 @import './avisos.css'; /* Aviso de reconexão e opções de painel. */
 @import './mapa.css'; /* Mapa de qualidade e "Onde agir". */
 @import './alertas.css'; /* Alerta de tendência ("supervisor no bolso"). */
+@import './atalhos.css'; /* Tamanho do texto, painéis recolhíveis, teclas de atalho e sua ajuda. */
 @import './celular.css'; /* Ajustes para celular (layout, barra de navegação). */

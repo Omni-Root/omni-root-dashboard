@@ -1,7 +1,7 @@
 /* ---- botões genéricos ---- */
 .btn {
   font: inherit;
-  font-size: 13px;
+  font-size: calc(13px * var(--escala-texto));
   color: var(--text-primary);
   background: var(--surface);
   border: 1px solid var(--axis);
@@ -28,7 +28,7 @@
 
 .export-menu .caret {
   margin-left: 6px;
-  font-size: 11px;
+  font-size: calc(11px * var(--escala-texto));
   opacity: 0.85;
 }
 
@@ -63,11 +63,11 @@
 }
 
 .export-item strong {
-  font-size: 13px;
+  font-size: calc(13px * var(--escala-texto));
 }
 
 .export-item span {
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-muted);
 }
 
@@ -79,7 +79,7 @@
 
 .export-error {
   color: var(--status-critical);
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
 }
 
 .user-chip {
@@ -87,7 +87,7 @@
   align-items: center;
   gap: 8px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   padding: 4px 10px;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -97,7 +97,7 @@
 /* "Sair" dentro do chip do usuário: um link discreto, não um botão a mais */
 .chip-link {
   font: inherit;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: inherit;
   background: none;
   border: 0;
@@ -119,7 +119,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-secondary);
   padding: 4px 10px;
   border: 1px solid var(--border);
@@ -183,7 +183,7 @@
   width: 34px;
   padding-left: 0;
   padding-right: 0;
-  font-size: 15px;
+  font-size: calc(15px * var(--escala-texto));
   line-height: 1;
 }
 

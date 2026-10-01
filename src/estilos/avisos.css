@@ -2,7 +2,7 @@
 .error-retry {
   display: block;
   margin-top: 4px;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   opacity: 0.85;
 }
 
@@ -17,7 +17,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   color: var(--text-secondary);
   cursor: pointer;
 }

@@ -12,7 +12,7 @@
   }
 
   .header h1 {
-    font-size: 17px;
+    font-size: calc(17px * var(--escala-texto));
   }
 
   .header .subtitle {
@@ -89,7 +89,7 @@
     text-align: center;
     padding: 13px 4px;
     color: var(--band-text);
-    font-size: 13px;
+    font-size: calc(13px * var(--escala-texto));
     font-weight: 600;
     text-decoration: none;
   }

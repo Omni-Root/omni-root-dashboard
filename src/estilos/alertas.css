@@ -18,14 +18,14 @@
   border-left: 6px solid var(--status-critical);
   border-radius: 8px;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: calc(13px * var(--escala-texto));
   line-height: 1.4;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .tendencia-icone {
   color: var(--status-critical);
-  font-size: 18px;
+  font-size: calc(18px * var(--escala-texto));
   flex: none;
 }
 
@@ -36,7 +36,7 @@
 
 .tendencia-ciente {
   flex: none;
-  font-size: 12px;
+  font-size: calc(12px * var(--escala-texto));
   padding: 5px 10px;
 }
 

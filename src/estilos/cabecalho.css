@@ -19,7 +19,7 @@
 }
 
 .header h1 {
-  font-size: 20px;
+  font-size: calc(20px * var(--escala-texto));
   margin: 0;
   color: var(--band-text);
   letter-spacing: 0.1px;
@@ -29,7 +29,7 @@
   color: var(--band-muted);
   display: block;
   margin-top: 2px;
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--escala-texto));
 }
 
 /* Título à esquerda, controles à direita, numa linha só sempre que couber.
