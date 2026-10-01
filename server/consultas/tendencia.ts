@@ -9,8 +9,8 @@
 // "Recente" é medido pelo relógio DESTE servidor, não pelo now() do Postgres:
 // data_inspecao é hora local da máquina (timestamp sem fuso) e o banco pode
 // estar em UTC (Docker) — comparar com now() deslocaria a janela em 3 h.
-import { pool } from './db.js';
-import { LIMITES, type Metrica } from './mapa.js';
+import { pool } from '../db.js';
+import { LIMITES, SEM_LUZ_CRITICA, type Metrica } from './mapa.js';
 
 const ULTIMAS = 5; // toras avaliadas por máquina
 const MINIMO_ACIMA = 3; // quantas delas precisam passar do limite
@@ -47,9 +47,14 @@ export async function getTendencia(maquinaId: number | null): Promise<AlertaTend
      ),
      p AS (
        SELECT u.id, u.maquina_id, u.data_inspecao, u.status_classificacao,
-              MAX(i.valor) FILTER (WHERE i.tipo_indicador = 'porcentagem_casca')::float AS casca,
+              -- Medida em luz crítica não conta para tendência de casca/tortuosidade
+              -- (baixa confiança): ruído noturno não pode mandar o supervisor
+              -- regular uma faca que está boa. A rejeição (status) conta sempre.
+              MAX(i.valor) FILTER (WHERE i.tipo_indicador = 'porcentagem_casca'
+                                     AND ${SEM_LUZ_CRITICA})::float AS casca,
               MAX(i.valor) FILTER (WHERE i.tipo_indicador = 'tortuosidade'
-                                     AND i.metodo_medicao LIKE 'opencv%')::float AS tort
+                                     AND i.metodo_medicao LIKE 'opencv%'
+                                     AND ${SEM_LUZ_CRITICA})::float AS tort
        FROM ult u
        LEFT JOIN indicadores_qualidade i ON i.tora_id = u.id
        WHERE u.rn <= $3

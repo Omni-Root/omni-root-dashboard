@@ -10,7 +10,8 @@ import {
 } from 'recharts';
 import type { Bucket, TimeseriesPoint } from '../types';
 import { STATUS_META, STATUS_ORDER } from '../types';
-import { useThemeTokens } from './useThemeTokens';
+import { useThemeTokens } from '../hooks/useThemeTokens';
+import { useEscalaTexto } from '../tamanhoTexto';
 
 // buckets chegam como "YYYY-MM-DDTHH:mm:ss" (hora local do evento) — formata
 // por fatia de string para não envolver fuso horário do navegador.
@@ -39,6 +40,7 @@ export default function TimeSeriesChart({
   acumulado?: boolean;
 }) {
   const tokens = useThemeTokens();
+  const fonteEixo = 11 * useEscalaTexto(); // acompanha o A− / A+ do cabeçalho
   const data = acumulado ? acumular(bruto) : bruto;
 
   if (data.length === 0) {
@@ -63,14 +65,14 @@ export default function TimeSeriesChart({
         <XAxis
           dataKey="bucket"
           tickFormatter={(b: string) => formatBucket(b, bucket)}
-          tick={{ fill: tokens.muted, fontSize: 11 }}
+          tick={{ fill: tokens.muted, fontSize: fonteEixo }}
           stroke={tokens.axis}
           tickLine={false}
           minTickGap={28}
         />
         <YAxis
           allowDecimals={false}
-          tick={{ fill: tokens.muted, fontSize: 11 }}
+          tick={{ fill: tokens.muted, fontSize: fonteEixo }}
           stroke="transparent"
           tickLine={false}
         />

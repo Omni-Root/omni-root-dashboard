@@ -49,6 +49,18 @@ export default function UltimaInspecao({ u }: { u: Ultima | null }) {
           {u.talhao_nome && ` · ${u.talhao_nome}`}
           {u.densidade.clone && ` · clone ${u.densidade.clone}`}
           {` · vista ${u.vista === 'secao' ? 'seção' : u.vista === 'lateral' ? 'lateral' : '—'}`}
+          {u.luz !== 'boa' && (
+            <span
+              className={`tile-tag${u.luz === 'critica' ? ' tag-luz-critica' : ''}`}
+              title={
+                u.luz === 'critica'
+                  ? 'Medida em luz crítica: baixa confiança (não entra nos alertas). Ilumine a tora.'
+                  : 'Medida em luz baixa, com realce de imagem (empilhamento de quadros + ganho).'
+              }
+            >
+              {u.luz === 'critica' ? 'luz crítica · baixa confiança' : 'luz baixa'}
+            </span>
+          )}
         </span>
       </div>
 

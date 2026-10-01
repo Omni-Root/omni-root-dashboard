@@ -78,6 +78,7 @@ export interface UltimaInspecao {
   defeitos: number;
   defeitos_tipos: string[];
   posicao: PosicaoTora | null;
+  luz: 'boa' | 'baixa' | 'critica';
 }
 
 // ---- Posição / mapa de qualidade ----
@@ -119,6 +120,7 @@ export interface MapaCelula {
   tort_media: number | null;
   tort_n: number;
   diam_medio: number | null;
+  luz_critica_n: number;
   primeira: string;
   ultima: string;
   niveis?: Record<Metrica, Nivel>;
@@ -166,6 +168,7 @@ export interface Mapa {
   celula_m: number;
   total: number;
   com_posicao: number;
+  luz_critica: number; // toras medidas em luz crítica (baixa confiança, fora dos alertas)
   fontes: { fonte: string; toras: number }[];
   celulas: MapaCelula[];
   pontos: MapaPonto[];

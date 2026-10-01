@@ -1,6 +1,7 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { Faixa } from '../types';
-import { useThemeTokens } from './useThemeTokens';
+import { useThemeTokens } from '../hooks/useThemeTokens';
+import { useEscalaTexto } from '../tamanhoTexto';
 
 // Histograma de UMA série (contagem de toras por faixa). Uma matiz só — é
 // magnitude, não identidade — e a matiz é a mesma rampa azul do mapa de
@@ -12,6 +13,7 @@ import { useThemeTokens } from './useThemeTokens';
 
 export default function Histograma({ data, unidade }: { data: Faixa[]; unidade: string }) {
   const tokens = useThemeTokens();
+  const fonteEixo = 11 * useEscalaTexto(); // acompanha o A− / A+ do cabeçalho
   const total = data.reduce((a, d) => a + d.total, 0);
 
   if (total === 0) {
@@ -24,14 +26,14 @@ export default function Histograma({ data, unidade }: { data: Faixa[]; unidade: 
         <CartesianGrid stroke={tokens.grid} vertical={false} />
         <XAxis
           dataKey="faixa"
-          tick={{ fill: tokens.muted, fontSize: 11 }}
+          tick={{ fill: tokens.muted, fontSize: fonteEixo }}
           stroke={tokens.axis}
           tickLine={false}
           interval={0}
         />
         <YAxis
           allowDecimals={false}
-          tick={{ fill: tokens.muted, fontSize: 11 }}
+          tick={{ fill: tokens.muted, fontSize: fonteEixo }}
           stroke="transparent"
           tickLine={false}
         />

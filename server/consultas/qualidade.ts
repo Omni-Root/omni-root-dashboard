@@ -6,10 +6,10 @@
 //
 // Fica num módulo separado de queries.ts de propósito: são painéis novos, com
 // SQL próprio, e assim não misturam com as consultas de operação.
-import { pool } from './db.js';
+import { pool } from '../db.js';
 import { getPosicaoTora, type PosicaoTora } from './mapa.js';
-import type { Filters } from './queries.js';
-import type { Status } from './validate.js';
+import type { Filters } from './filtros.js';
+import type { Status } from '../validate.js';
 
 // ------------------------------------------------------------
 // clones_densidade é uma migration do repo principal — pode não existir
@@ -89,6 +89,9 @@ export interface UltimaInspecao {
   defeitos: number;
   defeitos_tipos: string[];
   posicao: PosicaoTora | null; // posição da máquina no corte (GNSS); null = sem posição
+  // Luz em que a tora foi medida (omniroot/luz.py na máquina). 'critica' =
+  // medida com baixa confiança; sai do método de medição da casca.
+  luz: 'boa' | 'baixa' | 'critica';
 }
 
 async function buscarClone(cloneId: string | null): Promise<Omit<DensidadeInfo, 'valor' | 'clone'>> {
@@ -174,6 +177,11 @@ export async function getUltimaInspecao(maquinaId: number | null): Promise<Ultim
     defeitos: (def.rows as { n: number }[]).reduce((a, r) => a + r.n, 0),
     defeitos_tipos: (def.rows as { tipo_defeito: string }[]).map((r) => r.tipo_defeito),
     posicao,
+    luz: metodo('porcentagem_casca').endsWith('_luz_critica')
+      ? 'critica'
+      : metodo('porcentagem_casca').endsWith('_luz_baixa')
+        ? 'baixa'
+        : 'boa',
   };
 }
 

@@ -1,3 +1,4 @@
+import { isoDaysAgo } from '../datas';
 import type { Filters, Maquina } from '../types';
 
 const PRESETS = [
@@ -6,12 +7,6 @@ const PRESETS = [
   { label: '30 dias', days: 29 },
   { label: '90 dias', days: 89 },
 ];
-
-function isoDaysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
-}
 
 export default function FiltersBar({
   filters,

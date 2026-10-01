@@ -72,26 +72,26 @@ abriu mas não alcançou o PostgreSQL — confira host/porta/senha no `.env` e s
 o banco está no ar. Teste rápido: abra http://localhost:3001/api/health
 (deve responder `{"ok":true}`).
 
-## 6. (Opcional) Banco local de teste, sem acesso ao central
+## 6. (Opcional) Banco local, sem acesso ao central
 
-Cria um `desafio_madeira` com o schema real e ~8.000 inspeções sintéticas.
+O banco vem do repositório principal (`Omni-Root_challenge_2026`): lá,
+`docker compose up -d` sobe o PostgreSQL na porta 5432 e aplica o
+`Banco de dados/setup_completo.sql` (o único script do banco). Para ter
+dados, rode o `main.py` (ou `tests/simular_cenario.py`, sem câmera) e o
+`sync_daemon.py` de lá.
 
-**Com Docker instalado:**
+No `.env` daqui: `PG_HOST=localhost`, `PG_PORT=5432` e a senha do Postgres
+do Docker — e rode `npm run dev` de novo.
+
+## 6b. (Opcional) Abrir no celular
 
 ```bash
-cd db/dev
-docker compose up -d
-cd ../..
+npm run dev:celular
 ```
 
-**Sem Docker**, com qualquer PostgreSQL local vazio rodando na porta 5433:
-
-```bash
-node db/dev/setup-devdb.mjs 5433
-```
-
-Depois, no `.env`: `PG_HOST=localhost`, `PG_PORT=5433`, `PG_PASSWORD=dev`
-(Docker) ou vazio (Postgres próprio) — e rode `npm run dev` de novo.
+O terminal mostra um endereço `Network: http://192.168.x.x:5173`: abra no
+celular, na mesma rede Wi-Fi. Na primeira vez o Firewall do Windows pode
+perguntar se libera o Node — permita em rede privada.
 
 ## 7. (Opcional) Build de produção
 

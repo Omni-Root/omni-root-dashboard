@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 export type ThemeMode = 'system' | 'light' | 'dark';
 
 const STORAGE_KEY = 'omniroot-theme';
+export const EVENTO_PROXIMO_TEMA = 'omniroot:proximo-tema';
 
 function lerPreferencia(): ThemeMode {
   try {
@@ -42,6 +43,10 @@ const ROTULO: Record<ThemeMode, string> = {
   light: 'Claro',
   dark: 'Escuro',
 };
+/** Nome do tema que a próxima alternância vai aplicar (para o aviso da tecla T). */
+export function rotuloProximoTema(): string {
+  return ROTULO[PROXIMO[lerPreferencia()]];
+}
 const ICONE: Record<ThemeMode, string> = {
   system: '🖥️',
   light: '☀️',
@@ -60,12 +65,19 @@ export default function ThemeToggle() {
     }
   }, [mode]);
 
+  // Tecla T (useAtalhos) pede "próximo tema" por evento — o estado continua aqui.
+  useEffect(() => {
+    const proximo = () => setMode((m) => PROXIMO[m]);
+    window.addEventListener(EVENTO_PROXIMO_TEMA, proximo);
+    return () => window.removeEventListener(EVENTO_PROXIMO_TEMA, proximo);
+  }, []);
+
   return (
     <button
       type="button"
       className="btn theme-btn"
       onClick={() => setMode(PROXIMO[mode])}
-      title={`Tema: ${ROTULO[mode]} — clique para alternar`}
+      title={`Tema: ${ROTULO[mode]} — clique para alternar (tecla T)`}
       aria-label={`Alternar tema. Atual: ${ROTULO[mode]}`}
     >
       <span aria-hidden="true">{ICONE[mode]}</span>
