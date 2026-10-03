@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import type { LiveInfo } from '../hooks/useLive';
 import type { Filters } from '../types';
 import type { Voz } from '../voz';
+import AcessibilidadeMenu from './AcessibilidadeMenu';
 import ExportMenu from './ExportMenu';
 import LiveBadge from './LiveBadge';
 import TamanhoTexto from './TamanhoTexto';
@@ -9,7 +11,7 @@ import ThemeToggle from './ThemeToggle';
 import VozMenu from './VozMenu';
 
 // Faixa verde do topo: título, "Ao vivo", narração, exportações, tamanho do
-// texto, atalhos, tema e sessão.
+// texto, acessibilidade (daltônico / dislexia), atalhos, tema e sessão.
 export default function Cabecalho({
   live,
   voz,
@@ -25,6 +27,32 @@ export default function Cabecalho({
   onLogout: () => void;
   onAtalhos: () => void;
 }) {
+  // Menu do celular/tablet: fecha com toque fora, Esc ou se a janela
+  // crescer para o tamanho de computador (onde o menu não existe).
+  const [menuAberto, setMenuAberto] = useState(false);
+  const raiz = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menuAberto) return;
+    const fora = (e: MouseEvent | TouchEvent) => {
+      if (raiz.current && !raiz.current.contains(e.target as Node)) setMenuAberto(false);
+    };
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuAberto(false);
+    };
+    const largo = window.matchMedia('(min-width: 1025px)');
+    const cresceu = () => largo.matches && setMenuAberto(false);
+    document.addEventListener('mousedown', fora);
+    document.addEventListener('touchstart', fora);
+    document.addEventListener('keydown', tecla);
+    largo.addEventListener('change', cresceu);
+    return () => {
+      document.removeEventListener('mousedown', fora);
+      document.removeEventListener('touchstart', fora);
+      document.removeEventListener('keydown', tecla);
+      largo.removeEventListener('change', cresceu);
+    };
+  }, [menuAberto]);
+
   async function logout() {
     await api.logout().catch(() => {
       /* ignora: seguimos deslogando o cliente de qualquer forma */
@@ -40,27 +68,43 @@ export default function Cabecalho({
           Inspeções sincronizadas do campo — leitura do banco central
         </span>
       </div>
-      <div className="header-actions">
+      <div className="header-actions" ref={raiz}>
         <LiveBadge info={live} />
-        <VozMenu voz={voz} />
-        <ExportMenu filters={filters} onUnauthorized={onLogout} />
-        <TamanhoTexto />
+        {/* Celular e tablet (até 1024px): os controles abaixo ficam num
+            painel aberto por este botão. No computador o botão some e o
+            painel é "transparente" (display: contents) — tudo na faixa,
+            como sempre. Ver estilos/cabecalho.css. */}
         <button
           type="button"
-          className="btn theme-btn btn-atalhos"
-          onClick={onAtalhos}
-          title="Teclas de atalho (tecla ?)"
-          aria-label="Mostrar as teclas de atalho"
+          className="btn btn-menu"
+          aria-expanded={menuAberto}
+          aria-controls="header-controles"
+          onClick={() => setMenuAberto((v) => !v)}
         >
-          <span aria-hidden="true">⌨</span>
+          <span aria-hidden="true">{menuAberto ? '✕' : '☰'}</span> Menu
         </button>
-        <ThemeToggle />
-        <span className="user-chip" title="Usuário autenticado">
-          {user}
-          <button type="button" className="chip-link" onClick={logout}>
-            Sair
+        <div id="header-controles" className={`header-controles${menuAberto ? ' aberto' : ''}`}>
+          <VozMenu voz={voz} />
+          <ExportMenu filters={filters} onUnauthorized={onLogout} />
+          <TamanhoTexto />
+          <AcessibilidadeMenu />
+          <button
+            type="button"
+            className="btn theme-btn btn-atalhos"
+            onClick={onAtalhos}
+            title="Teclas de atalho (tecla ?)"
+            aria-label="Mostrar as teclas de atalho"
+          >
+            <span aria-hidden="true">⌨</span>
           </button>
-        </span>
+          <ThemeToggle />
+          <span className="user-chip" title="Usuário autenticado">
+            {user}
+            <button type="button" className="chip-link" onClick={logout}>
+              Sair
+            </button>
+          </span>
+        </div>
       </div>
     </header>
   );

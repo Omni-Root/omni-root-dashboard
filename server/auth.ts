@@ -108,23 +108,49 @@ function isHttps(req: express.Request): boolean {
   return req.secure || req.headers['x-forwarded-proto'] === 'https';
 }
 
+function isLoopback(req: express.Request): boolean {
+  const h = req.hostname.replace(/^\[|\]$/g, '');
+  return h === 'localhost' || h === '127.0.0.1' || h === '::1';
+}
+
+/**
+ * SameSite (e Secure) do cookie de sessão.
+ *
+ * Padrão: Lax. Exceção: no PRÓPRIO notebook (localhost / 127.0.0.1) vira
+ * `SameSite=None; Secure; Partitioned`. Motivo: as extensões de visualização
+ * mobile do VS Code mostram o painel dentro de um iframe de outro "site"
+ * (vscode-webview://), e nesse contexto o navegador não envia cookie Lax —
+ * o login passava, a chamada seguinte ia sem sessão e o app voltava para a
+ * tela de login. Testado num Chromium (base do VS Code): no iframe, o cookie
+ * Lax não volta; o None+Secure volta, inclusive em http://127.0.0.1 (o
+ * navegador trata loopback como contexto seguro). Partitioned = o cookie fica
+ * preso ao site que embute (não serve para rastrear entre sites).
+ *
+ * Fica restrito ao loopback: só quem está no próprio notebook chega por esse
+ * endereço, e a API é de leitura (outro site não consegue LER as respostas,
+ * o CORS barra). Pela rede (celular, 192.168.x.x) e em produção: Lax, como
+ * sempre.
+ */
+function atributosSameSite(req: express.Request): string[] {
+  if (isLoopback(req)) return ['SameSite=None', 'Secure', 'Partitioned'];
+  return isHttps(req) ? ['SameSite=Lax', 'Secure'] : ['SameSite=Lax'];
+}
+
 /** Grava o cookie de sessão na resposta. */
 export function setSessionCookie(req: express.Request, res: express.Response, token: string): void {
   const attrs = [
     `${COOKIE_NAME}=${token}`,
     'HttpOnly',
-    'SameSite=Lax',
+    ...atributosSameSite(req),
     'Path=/',
     `Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`,
   ];
-  if (isHttps(req)) attrs.push('Secure');
   res.setHeader('Set-Cookie', attrs.join('; '));
 }
 
-/** Limpa o cookie de sessão (logout). */
+/** Limpa o cookie de sessão (logout). Mesmos atributos, senão o navegador não apaga. */
 export function clearSessionCookie(req: express.Request, res: express.Response): void {
-  const attrs = [`${COOKIE_NAME}=`, 'HttpOnly', 'SameSite=Lax', 'Path=/', 'Max-Age=0'];
-  if (isHttps(req)) attrs.push('Secure');
+  const attrs = [`${COOKIE_NAME}=`, 'HttpOnly', ...atributosSameSite(req), 'Path=/', 'Max-Age=0'];
   res.setHeader('Set-Cookie', attrs.join('; '));
 }
 

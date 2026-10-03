@@ -95,6 +95,146 @@
   gap: 8px;
 }
 
+/* ---- menu do celular e do tablet ----
+   Computador: o botão "Menu" não existe e o contêiner dos controles é
+   transparente para o layout (display: contents) — a faixa fica como sempre.
+   Até 1024px: na faixa ficam o título, o "Ao vivo" e o botão Menu; os
+   controles viram um painel que abre por baixo da faixa. */
+.btn-menu {
+  display: none;
+}
+
+.header-controles {
+  display: contents;
+}
+
+@media (max-width: 1024px) {
+  .header {
+    position: relative;
+    flex-wrap: nowrap;
+  }
+
+  /* "Ao vivo" + Menu na mesma linha do título (inclusive no celular). */
+  .header-actions {
+    flex: 0 0 auto;
+    flex-basis: auto;
+    flex-wrap: nowrap;
+    margin-left: auto;
+  }
+
+  .btn-menu {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .header-controles {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px); /* logo abaixo do filete amarelo */
+    right: 12px;
+    z-index: 2500; /* acima do mapa (Leaflet) e do alerta fixo de tendência */
+    width: min(340px, calc(100vw - 24px));
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+    color: var(--text-primary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  }
+
+  .header-controles.aberto {
+    display: flex;
+  }
+
+  /* Dentro do painel o fundo é a superfície do tema, não a faixa verde:
+     desfaz o "vidro claro" dos controles do cabeçalho. */
+  .header .header-controles .btn,
+  .header .header-controles .theme-btn,
+  .header .header-controles .user-chip {
+    color: var(--text-primary);
+    background: var(--surface);
+    border-color: var(--axis);
+  }
+
+  .header .header-controles .btn:hover:not(:disabled) {
+    background: var(--grid);
+  }
+
+  /* Um controle por linha, ocupando a largura do painel. (Seletor com
+     .header: o controles.css vem depois na cascata e fixa a largura do
+     botão de tema em 34px.) */
+  .header .header-controles > * {
+    width: 100%;
+  }
+
+  .header-controles .export-menu,
+  .header-controles .voz-menu {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-controles .export-menu > .btn {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  /* Submenus (Exportar, Acessibilidade, Voz) abrem DENTRO do painel, empurrando
+     o resto para baixo, em vez de flutuar por cima dele. */
+  .header-controles .export-dropdown,
+  .header-controles .voz-dropdown {
+    position: static;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin-top: 6px;
+    box-shadow: none;
+  }
+
+  .header-controles .tamanho-texto .btn {
+    flex: 1;
+  }
+
+  /* Tema: no painel aparece o nome ("Sistema / Claro / Escuro"), não só o ícone. */
+  .header-controles .theme-btn {
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 7px 12px;
+  }
+
+  .header-controles .theme-btn .sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* Celular e tablet: sem teclado físico, sem botão de atalhos. */
+  .header-controles .btn-atalhos {
+    display: none;
+  }
+
+  .header-controles .user-chip {
+    justify-content: space-between;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  .header-controles .chip-link {
+    border-left-color: var(--axis);
+  }
+}
+
 /* Só para leitores de tela (rótulo do botão de tema, que mostra só o ícone) */
 .sr-only {
   position: absolute;

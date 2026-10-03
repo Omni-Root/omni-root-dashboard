@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { alternarModo } from '../acessibilidade';
 import AjudaAtalhos from '../components/AjudaAtalhos';
 import AlertasTendencia from '../components/AlertasTendencia';
 import AvisoConexao from '../components/AvisoConexao';
@@ -123,6 +124,18 @@ export default function Painel({ user, onLogout }: { user: string; onLogout: () 
         window.dispatchEvent(new Event(EVENTO_PROXIMO_TEMA));
       },
     },
+    {
+      teclas: ['c'],
+      grupo: 'Tela',
+      descricao: 'Cores para daltônicos (liga / desliga)',
+      acao: () => avisar(alternarModo('daltonico') ? 'Cores para daltônicos: ligado' : 'Cores para daltônicos: desligado'),
+    },
+    {
+      teclas: ['d'],
+      grupo: 'Tela',
+      descricao: 'Leitura para dislexia (liga / desliga)',
+      acao: () => avisar(alternarModo('dislexia') ? 'Leitura para dislexia: ligado' : 'Leitura para dislexia: desligado'),
+    },
     { teclas: ['f'], grupo: 'Tela', descricao: 'Tela cheia (liga / desliga)', acao: alternarTelaCheia },
     {
       teclas: ['e'],
@@ -192,7 +205,9 @@ export default function Painel({ user, onLogout }: { user: string; onLogout: () 
 
           <Secao
             id="agora"
-            className="panel-ultima two-thirds"
+            // O painel inteiro veste a cor do resultado da última tora
+            // (aprovada / contenção / rejeitada) — lida do outro lado da sala.
+            className={`panel-ultima two-thirds${ultima ? ` ultima-${ultima.status}` : ''}`}
             titulo="Última inspeção recebida do campo"
             sub="Indicadores da tora mais recente — atualiza sozinho quando a máquina sincroniza"
             acoes={

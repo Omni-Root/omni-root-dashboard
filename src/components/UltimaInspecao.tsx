@@ -40,7 +40,7 @@ export default function UltimaInspecao({ u }: { u: Ultima | null }) {
     <div className="ultima" key={u.id}>
       <div className="ultima-head">
         <span className="ultima-status" style={{ color: meta.cssVar }}>
-          <span className="dot" style={{ background: meta.cssVar }} />
+          <span className="dot" data-icone={meta.icone} style={{ background: meta.cssVar }} />
           {meta.label}
         </span>
         <span className="ultima-meta">
