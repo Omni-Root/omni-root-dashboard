@@ -34,10 +34,12 @@ export interface Filters {
 
 // Rótulos e cores de status usados em toda a UI (cores de status são fixas,
 // nunca reaproveitadas como cores de série genéricas).
-export const STATUS_META: Record<Status, { label: string; cssVar: string }> = {
-  aprovado: { label: 'Aprovada', cssVar: 'var(--status-good)' },
-  quarentena: { label: 'Contenção', cssVar: 'var(--status-warning)' },
-  reprovado: { label: 'Rejeitada', cssVar: 'var(--status-critical)' },
+// `icone`: no modo daltônico a bolinha de status vira este símbolo — a cor
+// nunca é a única pista (ver estilos/acessibilidade.css).
+export const STATUS_META: Record<Status, { label: string; cssVar: string; icone: string }> = {
+  aprovado: { label: 'Aprovada', cssVar: 'var(--status-good)', icone: '✓' },
+  quarentena: { label: 'Contenção', cssVar: 'var(--status-warning)', icone: '!' },
+  reprovado: { label: 'Rejeitada', cssVar: 'var(--status-critical)', icone: '✕' },
 };
 
 export const STATUS_ORDER: Status[] = ['aprovado', 'quarentena', 'reprovado'];

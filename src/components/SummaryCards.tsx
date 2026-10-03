@@ -20,7 +20,7 @@ export default function SummaryCards({ rows }: { rows: SummaryRow[] }) {
         return (
           <div className="card" key={s}>
             <div className="card-label">
-              <span className="dot" style={{ background: STATUS_META[s].cssVar }} />
+              <span className="dot" data-icone={STATUS_META[s].icone} style={{ background: STATUS_META[s].cssVar }} />
               {STATUS_META[s].label}
             </div>
             <div className="card-value">{fmt.format(n)}</div>
