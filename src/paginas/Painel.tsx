@@ -44,6 +44,15 @@ function irPara(id: string): void {
   });
 }
 
+// Volta ao topo da página (teclas I e Home) — na apresentação, recomeçar o
+// roteiro do início sem rolar. Avisa a barra lateral para marcar a primeira
+// seção na hora (senão ela seguiria marcando a última escolhida por ~1,5 s).
+function irAoTopo(): void {
+  window.dispatchEvent(new CustomEvent(EVENTO_SECAO, { detail: 'resumo' }));
+  const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({ top: 0, behavior: suave ? 'smooth' : 'auto' });
+}
+
 function alternarTelaCheia(): void {
   if (document.fullscreenElement) void document.exitFullscreen();
   else void document.documentElement.requestFullscreen?.().catch(() => undefined);
@@ -104,6 +113,15 @@ export default function Painel({ user, onLogout }: { user: string; onLogout: () 
     avisar(`Texto ${Math.round(escalaAtual() * 100)}%`);
   };
   const atalhos: Atalho[] = [
+    {
+      teclas: ['i', 'Home'],
+      grupo: 'Ir para',
+      descricao: 'Topo da página (início)',
+      acao: () => {
+        irAoTopo();
+        avisar('Topo da página');
+      },
+    },
     // Mesma ordem e números da barra lateral (Painel 1–4, Análises 5–8).
     { teclas: ['1'], grupo: 'Ir para', descricao: 'Resumo do período', acao: () => irPara('resumo') },
     { teclas: ['2'], grupo: 'Ir para', descricao: 'Agora: câmera e última inspeção', acao: () => irPara('agora') },
