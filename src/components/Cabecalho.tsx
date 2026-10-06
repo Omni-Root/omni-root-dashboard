@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import type { LiveInfo } from '../hooks/useLive';
-import type { Filters } from '../types';
+import type { AlertaTendencia, Filters } from '../types';
 import type { Voz } from '../voz';
 import AcessibilidadeMenu from './AcessibilidadeMenu';
 import ExportMenu from './ExportMenu';
 import LiveBadge from './LiveBadge';
+import Notificacoes from './Notificacoes';
 import TamanhoTexto from './TamanhoTexto';
 import ThemeToggle from './ThemeToggle';
 import VozMenu from './VozMenu';
@@ -19,6 +20,7 @@ export default function Cabecalho({
   user,
   onLogout,
   onAtalhos,
+  alertas,
 }: {
   live: LiveInfo;
   voz: Voz;
@@ -26,6 +28,7 @@ export default function Cabecalho({
   user: string;
   onLogout: () => void;
   onAtalhos: () => void;
+  alertas: AlertaTendencia[] | null;
 }) {
   // Menu do celular/tablet: fecha com toque fora, Esc ou se a janela
   // crescer para o tamanho de computador (onde o menu não existe).
@@ -63,13 +66,18 @@ export default function Cabecalho({
   return (
     <header className="header">
       <div className="header-title">
-        <h1>Omni-Root · Qualidade da Madeira</h1>
+        {/* No computador a marca está na barra lateral; aqui só no celular/tablet. */}
+        <h1>
+          <span className="h-marca">Omni-Root</span> Qualidade da madeira
+        </h1>
         <span className="subtitle">
           Inspeções sincronizadas do campo — leitura do banco central
         </span>
       </div>
       <div className="header-actions" ref={raiz}>
         <LiveBadge info={live} />
+        {/* Sino fica fora do Menu do celular: o contador precisa estar sempre à vista. */}
+        <Notificacoes alertas={alertas} falar={(t) => voz.falar(t)} />
         {/* Celular e tablet (até 1024px): os controles abaixo ficam num
             painel aberto por este botão. No computador o botão some e o
             painel é "transparente" (display: contents) — tudo na faixa,

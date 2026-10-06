@@ -187,6 +187,12 @@
    funciona offline), espaço maior entre letras, palavras e linhas, sem
    itálico nem CAIXA ALTA, fundo creme em vez de branco puro.
    ============================================================ */
+/* As fontes da identidade (títulos e números incluídos) viram OpenDyslexic. */
+:root[data-leitura='dislexia'] {
+  --fonte-texto: 'OpenDyslexic', system-ui, sans-serif;
+  --fonte-display: 'OpenDyslexic', system-ui, sans-serif;
+}
+
 :root[data-leitura='dislexia'] body,
 :root[data-leitura='dislexia'] .leaflet-container {
   font-family: 'OpenDyslexic', system-ui, sans-serif;
