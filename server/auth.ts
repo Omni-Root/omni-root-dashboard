@@ -60,6 +60,16 @@ export function createSessionToken(user: string): string {
   return `${payloadB64}.${b64url(sig)}`;
 }
 
+/** HMAC do segredo da sessão (base64url) — o OAuth assina o cookie de `state` com ele. */
+export function assinar(texto: string): string {
+  return b64url(crypto.createHmac('sha256', SECRET).update(texto).digest());
+}
+
+/** Comparação de tempo constante entre duas strings (para assinaturas). */
+export function iguais(a: string, b: string): boolean {
+  return safeEqual(a, b);
+}
+
 /** Valida o token; devolve o usuário se a assinatura bate e não expirou. */
 export function verifySessionToken(token: string | undefined): { user: string } | null {
   if (!token) return null;
@@ -145,13 +155,13 @@ export function setSessionCookie(req: express.Request, res: express.Response, to
     'Path=/',
     `Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`,
   ];
-  res.setHeader('Set-Cookie', attrs.join('; '));
+  res.append('Set-Cookie', attrs.join('; ')); // append: não apaga outro cookie da mesma resposta (ex.: o `state` do OAuth)
 }
 
 /** Limpa o cookie de sessão (logout). Mesmos atributos, senão o navegador não apaga. */
 export function clearSessionCookie(req: express.Request, res: express.Response): void {
   const attrs = [`${COOKIE_NAME}=`, 'HttpOnly', ...atributosSameSite(req), 'Path=/', 'Max-Age=0'];
-  res.setHeader('Set-Cookie', attrs.join('; '));
+  res.append('Set-Cookie', attrs.join('; ')); // append: não apaga outro cookie da mesma resposta (ex.: o `state` do OAuth)
 }
 
 /** Lê a sessão válida do request, se houver. */

@@ -4,6 +4,7 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rotasSessao } from './rotas/sessao.js';
+import { rotasOAuth } from './rotas/oauth.js';
 import { rotasPainel } from './rotas/painel.js';
 import { rotasCamera } from './rotas/camera.js';
 import { rotasExportacoes } from './rotas/exportacoes.js';
@@ -14,6 +15,7 @@ export function criarApp(): express.Express {
   app.use(express.json({ limit: '64kb' }));
 
   app.use(rotasSessao);
+  app.use(rotasOAuth); // login social (Google, Facebook, GitHub)
   app.use(rotasPainel);
   app.use(rotasCamera);
   app.use(rotasExportacoes);
