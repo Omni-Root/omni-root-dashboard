@@ -281,3 +281,207 @@
     transition: none;
   }
 }
+
+/* ============================================================
+   ALTO CONTRASTE  (html[data-contraste="alto"], tecla X)
+   Claro: preto puro sobre branco. Escuro: branco sobre preto puro.
+   Todo texto e toda cor de status >= 7:1 contra o fundo (nível AAA da
+   WCAG; medido: o pior par é 7,2:1, o texto principal 21:1); bordas e
+   linhas de gráfico >= 3:1. Sem sombras nem transparências: separação por
+   borda. Vem por último no arquivo e com seletores mais específicos: vale
+   por cima do creme da dislexia; com o daltônico, usa a paleta daltônica
+   em tons fortes (blocos [data-cores] abaixo).
+   ============================================================ */
+@media (prefers-color-scheme: light) {
+  :root[data-contraste='alto']:not([data-theme='dark']) {
+    --page: #ffffff;
+    --surface: #ffffff;
+    --tint: #f0f0f0;
+    --tint-strong: #e0e0e0;
+    --text-primary: #000000;
+    --text-secondary: #1f1f1f;
+    --text-muted: #3d3d3d;
+    --grid: #8a8a8a;
+    --axis: #000000;
+    --border: #000000;
+    --jd-green: #143d10;
+    --accent: #1d4d14;
+    --accent-contrast: #ffffff;
+    --band: #143d10;
+    --band-text: #ffffff;
+    --band-muted: #e8e8e8;
+    --status-good: #1b5e20;
+    --status-warning: #7a4a00;
+    --status-critical: #9b0000;
+    --sombra-cartao: 0 0 0 2px #000000;
+  }
+}
+
+:root[data-contraste='alto'][data-theme='light'] {
+  --page: #ffffff;
+  --surface: #ffffff;
+  --tint: #f0f0f0;
+  --tint-strong: #e0e0e0;
+  --text-primary: #000000;
+  --text-secondary: #1f1f1f;
+  --text-muted: #3d3d3d;
+  --grid: #8a8a8a;
+  --axis: #000000;
+  --border: #000000;
+  --jd-green: #143d10;
+  --accent: #1d4d14;
+  --accent-contrast: #ffffff;
+  --band: #143d10;
+  --band-text: #ffffff;
+  --band-muted: #e8e8e8;
+  --status-good: #1b5e20;
+  --status-warning: #7a4a00;
+  --status-critical: #9b0000;
+  --sombra-cartao: 0 0 0 2px #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-contraste='alto']:not([data-theme='light']) {
+    --page: #000000;
+    --surface: #000000;
+    --tint: #111111;
+    --tint-strong: #1c1c1c;
+    --text-primary: #ffffff;
+    --text-secondary: #f2f2f2;
+    --text-muted: #cfcfcf;
+    --grid: #7a7a7a;
+    --axis: #ffffff;
+    --border: #ffffff;
+    --jd-green: #8be07a;
+    --accent: #8be07a;
+    --accent-contrast: #000000;
+    --band: #000000;
+    --band-text: #ffffff;
+    --band-muted: #e0e0e0;
+    --status-good: #7ee07a;
+    --status-warning: #ffd23d;
+    --status-critical: #ff8a80;
+    --sombra-cartao: 0 0 0 2px #ffffff;
+  }
+}
+
+:root[data-contraste='alto'][data-theme='dark'] {
+  --page: #000000;
+  --surface: #000000;
+  --tint: #111111;
+  --tint-strong: #1c1c1c;
+  --text-primary: #ffffff;
+  --text-secondary: #f2f2f2;
+  --text-muted: #cfcfcf;
+  --grid: #7a7a7a;
+  --axis: #ffffff;
+  --border: #ffffff;
+  --jd-green: #8be07a;
+  --accent: #8be07a;
+  --accent-contrast: #000000;
+  --band: #000000;
+  --band-text: #ffffff;
+  --band-muted: #e0e0e0;
+  --status-good: #7ee07a;
+  --status-warning: #ffd23d;
+  --status-critical: #ff8a80;
+  --sombra-cartao: 0 0 0 2px #ffffff;
+}
+
+/* Alto contraste + daltônico: azul / laranja / vinho em tons fortes. */
+@media (prefers-color-scheme: light) {
+  :root[data-contraste='alto'][data-cores='daltonico']:not([data-theme='dark']) {
+    --status-good: #0b4fa3;
+    --status-warning: #8a4500;
+    --status-critical: #6b1a45;
+    --accent: #1f1f1f;
+    --band: #000000;
+  }
+}
+:root[data-contraste='alto'][data-cores='daltonico'][data-theme='light'] {
+  --status-good: #0b4fa3;
+  --status-warning: #8a4500;
+  --status-critical: #6b1a45;
+  --accent: #1f1f1f;
+  --band: #000000;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-contraste='alto'][data-cores='daltonico']:not([data-theme='light']) {
+    --status-good: #7cc4ff;
+    --status-warning: #ffb347;
+    --status-critical: #ff9ad5;
+    --accent: #ffffff;
+  }
+}
+:root[data-contraste='alto'][data-cores='daltonico'][data-theme='dark'] {
+  --status-good: #7cc4ff;
+  --status-warning: #ffb347;
+  --status-critical: #ff9ad5;
+  --accent: #ffffff;
+}
+
+/* Estrutura (vale nos dois temas): bordas no lugar de sombras e
+   transparências, foco grosso e visível, nada "apagado". */
+:root[data-contraste='alto'] .app .header,
+:root[data-contraste='alto'] .panel,
+:root[data-contraste='alto'] .filters,
+:root[data-contraste='alto'] .barra-lateral {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root[data-contraste='alto'] .app .header {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+}
+
+:root[data-contraste='alto'] .barra-lateral {
+  border-right: 2px solid var(--border);
+}
+
+:root[data-contraste='alto'] .card,
+:root[data-contraste='alto'] .tile {
+  box-shadow: 0 0 0 2px var(--border);
+}
+
+:root[data-contraste='alto'] .btn,
+:root[data-contraste='alto'] .btn-social,
+:root[data-contraste='alto'] .filters input,
+:root[data-contraste='alto'] .filters select,
+:root[data-contraste='alto'] .login-form input {
+  border: 2px solid var(--border);
+}
+
+:root[data-contraste='alto'] *:focus-visible {
+  outline: 3px solid var(--text-primary) !important;
+  outline-offset: 2px;
+}
+
+/* O ponto amarelo do "Ao vivo" quase some sobre branco: no alto
+   contraste ele usa o acento (verde escuro / verde claro). */
+:root[data-contraste='alto'] .live-ao-vivo .live-dot {
+  background: var(--accent) !important;
+  box-shadow: none !important;
+}
+
+:root[data-contraste='alto'] .chip-link,
+:root[data-contraste='alto'] .notif-todos {
+  text-decoration: underline;
+}
+
+/* Medido pelo varredor de contraste: o fundo levemente tingido da última
+   inspeção derrubava o nome do status para 6,9:1 (claro); fundo puro. */
+:root[data-contraste='alto'] .panel.ultima-aprovado,
+:root[data-contraste='alto'] .panel.ultima-quarentena,
+:root[data-contraste='alto'] .panel.ultima-reprovado {
+  background: var(--surface);
+}
+
+/* Contador do sino e "N novos": texto branco sobre o vermelho, que no
+   escuro vira rosa claro (1,9-2,3:1). Usa a cor do fundo (preto no
+   escuro, branco no claro): sempre o oposto do vermelho daquele tema. */
+:root[data-contraste='alto'] .notif-contador,
+:root[data-contraste='alto'] .notif-total {
+  color: var(--surface);
+  border-color: var(--surface);
+}

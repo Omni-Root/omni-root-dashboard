@@ -137,6 +137,12 @@ export default function Painel({ user, onLogout }: { user: string; onLogout: () 
       descricao: 'Leitura para dislexia (liga / desliga)',
       acao: () => avisar(alternarModo('dislexia') ? 'Leitura para dislexia: ligado' : 'Leitura para dislexia: desligado'),
     },
+    {
+      teclas: ['x'],
+      grupo: 'Tela',
+      descricao: 'Alto contraste (liga / desliga)',
+      acao: () => avisar(alternarModo('contraste') ? 'Alto contraste: ligado' : 'Alto contraste: desligado'),
+    },
     { teclas: ['f'], grupo: 'Tela', descricao: 'Tela cheia (liga / desliga)', acao: alternarTelaCheia },
     {
       teclas: ['e'],
