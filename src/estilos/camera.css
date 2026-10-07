@@ -79,6 +79,71 @@
   max-width: 34ch;
 }
 
+/* Botão de tela cheia no canto do quadro: escuro e translúcido, legível
+   sobre qualquer imagem (e acima do aviso "Sem sinal"). */
+.camera-tela-cheia {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.camera-tela-cheia:hover {
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.camera-tela-cheia:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Tela cheia (botão ou tecla V): o painel inteiro ocupa a tela — selo
+   "Ao vivo" em cima, imagem no meio (sem distorcer), classificação embaixo —
+   com letras maiores para quem está longe. */
+.camera:fullscreen {
+  background: var(--page);
+  padding: 20px 28px;
+  gap: 14px;
+}
+
+.camera:fullscreen .camera-frame {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+
+.camera:fullscreen .live-badge,
+.camera:fullscreen .camera-serie {
+  font-size: calc(17px * var(--escala-texto));
+}
+
+.camera:fullscreen .camera-foot {
+  font-size: calc(17px * var(--escala-texto));
+}
+
+.camera:fullscreen .camera-status .dot {
+  width: 12px;
+  height: 12px;
+}
+
+.camera:fullscreen .camera-tela-cheia {
+  top: 14px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+}
+
 .camera-foot {
   display: flex;
   flex-wrap: wrap;

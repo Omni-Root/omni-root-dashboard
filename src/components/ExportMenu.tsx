@@ -2,17 +2,32 @@ import { useEffect, useRef, useState } from 'react';
 import { api, UnauthorizedError } from '../api';
 import type { Filters } from '../types';
 
-type Kind = 'csv' | 'pdf' | 'stanford';
+export type Kind = 'csv' | 'pdf' | 'stanford';
 
 // Um único botão "Exportar ▾" com as três saídas num menu. Três botões lado a
 // lado no cabeçalho não cabiam ao lado do título em janelas médias (o header
 // quebrava em duas linhas) e competiam com o chip "Ao vivo". O menu fecha com
-// clique fora, Esc ou ao escolher uma opção.
-const OPCOES: { kind: Kind; titulo: string; descricao: string; run: (f: Filters) => Promise<void> }[] = [
-  { kind: 'csv', titulo: 'CSV', descricao: 'Dados brutos das inspeções (Excel pt-BR)', run: (f) => api.exportCsv(f) },
-  { kind: 'pdf', titulo: 'Relatório PDF', descricao: 'Sumário do período, gerado no servidor', run: (f) => api.exportPdf(f) },
-  { kind: 'stanford', titulo: 'StanForD (.hpr)', descricao: 'XML padrão florestal, um arquivo por máquina em ZIP', run: (f) => api.exportStanford(f) },
+// clique fora, Esc ou ao escolher uma opção. As teclas B, P e S do painel
+// fazem o mesmo que escolher no menu (ver pedirExportacao).
+const OPCOES: { kind: Kind; titulo: string; descricao: string; tecla: string; run: (f: Filters) => Promise<void> }[] = [
+  { kind: 'csv', titulo: 'CSV', descricao: 'Dados brutos das inspeções (Excel pt-BR)', tecla: 'B', run: (f) => api.exportCsv(f) },
+  { kind: 'pdf', titulo: 'Relatório PDF', descricao: 'Sumário do período, gerado no servidor', tecla: 'P', run: (f) => api.exportPdf(f) },
+  {
+    kind: 'stanford',
+    titulo: 'StanForD (.hpr)',
+    descricao: 'XML padrão florestal, um arquivo por máquina em ZIP',
+    tecla: 'S',
+    run: (f) => api.exportStanford(f),
+  },
 ];
+
+// Atalho de teclado: exporta pelo MESMO caminho do menu — o botão mostra
+// "Gerando…" e um erro aparece ao lado dele. Devolve false se já há uma
+// exportação em andamento.
+const EVENTO_EXPORTAR = 'omniroot:exportar';
+export function pedirExportacao(kind: Kind): boolean {
+  return !window.dispatchEvent(new CustomEvent<Kind>(EVENTO_EXPORTAR, { detail: kind, cancelable: true }));
+}
 
 export default function ExportMenu({
   filters,
@@ -59,6 +74,20 @@ export default function ExportMenu({
     }
   };
 
+  // O ouvinte do atalho é registrado uma vez e lê sempre o estado atual.
+  const atual = useRef({ filters, busy, exportar });
+  atual.current = { filters, busy, exportar };
+  useEffect(() => {
+    const aoPedir = (e: Event) => {
+      const o = OPCOES.find((x) => x.kind === (e as CustomEvent<Kind>).detail);
+      if (!o || atual.current.busy) return;
+      e.preventDefault(); // avisa pedirExportacao() que a exportação começou
+      void atual.current.exportar(o.kind, () => o.run(atual.current.filters));
+    };
+    window.addEventListener(EVENTO_EXPORTAR, aoPedir);
+    return () => window.removeEventListener(EVENTO_EXPORTAR, aoPedir);
+  }, []);
+
   const ocupado = OPCOES.find((o) => o.kind === busy);
 
   return (
@@ -70,7 +99,7 @@ export default function ExportMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        title="Exportar as inspeções do período e máquina filtrados"
+        title="Exportar as inspeções do período e máquina filtrados (teclas B, P e S)"
       >
         {ocupado ? `Gerando ${ocupado.titulo}…` : 'Exportar'}
         <span className="caret" aria-hidden="true">
@@ -87,7 +116,10 @@ export default function ExportMenu({
               className="export-item"
               onClick={() => void exportar(o.kind, () => o.run(filters))}
             >
-              <strong>{o.titulo}</strong>
+              <span className="export-item-topo">
+                <strong>{o.titulo}</strong>
+                <kbd>{o.tecla}</kbd>
+              </span>
               <span>{o.descricao}</span>
             </button>
           ))}

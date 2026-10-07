@@ -39,6 +39,10 @@ export function definirRecolhida(id: string, recolher: boolean): void {
   gravar(novo);
 }
 
+export function estaRecolhida(id: string): boolean {
+  return recolhidas.has(id);
+}
+
 export function expandirTodas(): boolean {
   if (recolhidas.size === 0) return false;
   gravar(new Set());

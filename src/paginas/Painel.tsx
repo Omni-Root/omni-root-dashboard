@@ -3,8 +3,9 @@ import { alternarModo } from '../acessibilidade';
 import AjudaAtalhos from '../components/AjudaAtalhos';
 import BarraLateral, { EVENTO_SECAO } from '../components/BarraLateral';
 import AvisoConexao from '../components/AvisoConexao';
+import { pedirExportacao, type Kind as FormatoExportacao } from '../components/ExportMenu';
 import Cabecalho from '../components/Cabecalho';
-import CameraAoVivo from '../components/CameraAoVivo';
+import CameraAoVivo, { alternarCameraTelaCheia } from '../components/CameraAoVivo';
 import FiltersBar from '../components/Filters';
 import Heatmap from '../components/Heatmap';
 import Histograma from '../components/Histograma';
@@ -12,7 +13,7 @@ import MapaQualidade from '../components/MapaQualidade';
 import NavCelular from '../components/NavCelular';
 import ProportionDonut from '../components/ProportionDonut';
 import QualidadeTalhao from '../components/QualidadeTalhao';
-import Secao, { definirRecolhida, expandirTodas } from '../components/Secao';
+import Secao, { definirRecolhida, estaRecolhida, expandirTodas } from '../components/Secao';
 import SummaryCards from '../components/SummaryCards';
 import { EVENTO_PROXIMO_TEMA, rotuloProximoTema } from '../components/ThemeToggle';
 import TimeSeriesChart from '../components/TimeSeriesChart';
@@ -112,6 +113,9 @@ export default function Painel({ user, onLogout }: { user: string; onLogout: () 
     f();
     avisar(`Texto ${Math.round(escalaAtual() * 100)}%`);
   };
+  // Teclas B, P e S: o download sai do período e máquina filtrados, como no menu Exportar.
+  const exportarPorTecla = (formato: FormatoExportacao, nome: string) => () =>
+    avisar(pedirExportacao(formato) ? `Gerando ${nome}…` : 'Aguarde: já há uma exportação em andamento');
   const atalhos: Atalho[] = [
     {
       teclas: ['i', 'Home'],
@@ -163,6 +167,18 @@ export default function Painel({ user, onLogout }: { user: string; onLogout: () 
     },
     { teclas: ['f'], grupo: 'Tela', descricao: 'Tela cheia (liga / desliga)', acao: alternarTelaCheia },
     {
+      teclas: ['v'],
+      grupo: 'Tela',
+      descricao: 'Câmera ao vivo em tela cheia (liga / desliga)',
+      acao: () => {
+        if (alternarCameraTelaCheia()) return;
+        if (estaRecolhida('camera')) {
+          irPara('camera');
+          avisar('Câmera aberta: tecle V de novo para a tela cheia');
+        } else avisar('Nenhuma câmera transmitindo agora');
+      },
+    },
+    {
       teclas: ['e'],
       grupo: 'Tela',
       descricao: 'Expandir todos os painéis recolhidos',
@@ -199,6 +215,9 @@ export default function Painel({ user, onLogout }: { user: string; onLogout: () 
       descricao: 'Notificações (abre / fecha)',
       acao: () => window.dispatchEvent(new Event(EVENTO_NOTIFICACOES)),
     },
+    { teclas: ['p'], grupo: 'Demonstração', descricao: 'Baixar o relatório PDF do período', acao: exportarPorTecla('pdf', 'PDF') },
+    { teclas: ['b'], grupo: 'Demonstração', descricao: 'Baixar os dados brutos (CSV)', acao: exportarPorTecla('csv', 'CSV') },
+    { teclas: ['s'], grupo: 'Demonstração', descricao: 'Baixar no padrão StanForD (.hpr em ZIP)', acao: exportarPorTecla('stanford', 'StanForD') },
     { teclas: ['?', 'h'], grupo: 'Demonstração', descricao: 'Mostrar / esconder esta ajuda', acao: () => setAjudaAberta((v) => !v) },
     { teclas: ['Escape'], grupo: 'Demonstração', descricao: 'Fechar a ajuda', acao: () => setAjudaAberta(false) },
   ];
