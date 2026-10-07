@@ -5,16 +5,16 @@ import ThemeToggle from './ThemeToggle';
 
 // Tela de login: à esquerda a vitrine (marca + curvas de nível de talhão), à
 // direita o formulário. Duas formas de entrar:
-//   - Google / Facebook / GitHub (OAuth, ver server/rotas/oauth.ts): só para
+//   - Google / Microsoft / GitHub (OAuth, ver server/rotas/oauth.ts): só para
 //     e-mails liberados em OAUTH_PERMITIDOS; precisa de internet;
 //   - usuário e senha do .env (o admin): funciona offline — é o caminho
 //     garantido da demo.
 
-type Provedor = 'google' | 'facebook' | 'github';
+type Provedor = 'google' | 'microsoft' | 'github';
 
 const PROVEDORES: { id: Provedor; nome: string; variavel: string }[] = [
   { id: 'google', nome: 'Google', variavel: 'GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET' },
-  { id: 'facebook', nome: 'Facebook', variavel: 'FACEBOOK_APP_ID e FACEBOOK_APP_SECRET' },
+  { id: 'microsoft', nome: 'Microsoft', variavel: 'MICROSOFT_CLIENT_ID e MICROSOFT_CLIENT_SECRET' },
   { id: 'github', nome: 'GitHub', variavel: 'GITHUB_CLIENT_ID e GITHUB_CLIENT_SECRET' },
 ];
 
@@ -24,7 +24,8 @@ const ERROS_SOCIAIS: Record<string, string> = {
   sem_permitidos: 'Login social desligado: nenhum e-mail autorizado em OAUTH_PERMITIDOS.',
   estado_invalido: 'A tentativa de login expirou ou não pôde ser confirmada. Tente de novo.',
   cancelado: 'Login cancelado.',
-  sem_email: 'Essa conta não tem um e-mail verificado para conferirmos o acesso.',
+  sem_email:
+    'Essa conta não tem um e-mail verificado para conferirmos o acesso. Na Microsoft, use uma conta pessoal ou a da organização liberada.',
   nao_autorizado: 'Essa conta não tem acesso a este painel. Peça a liberação ao administrador.',
   falha_provedor: 'Não foi possível falar com o provedor (sem internet?). Entre com usuário e senha.',
   provedor_desconhecido: 'Forma de login desconhecida.',
@@ -252,13 +253,13 @@ function MarcaProvedor({ id }: { id: Provedor }) {
       </svg>
     );
   }
-  if (id === 'facebook') {
+  if (id === 'microsoft') {
     return (
       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          fill="#0866FF"
-          d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"
-        />
+        <path fill="#F25022" d="M1 1h10.5v10.5H1z" />
+        <path fill="#7FBA00" d="M12.5 1H23v10.5H12.5z" />
+        <path fill="#00A4EF" d="M1 12.5h10.5V23H1z" />
+        <path fill="#FFB900" d="M12.5 12.5H23V23H12.5z" />
       </svg>
     );
   }

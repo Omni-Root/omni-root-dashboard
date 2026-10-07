@@ -75,7 +75,7 @@ export interface MeResponse {
 
 export interface ProvedoresLogin {
   google: boolean;
-  facebook: boolean;
+  microsoft: boolean;
   github: boolean;
   /** OAUTH_PERMITIDOS tem alguém? Sem isso, o login social fica desligado. */
   permitidosDefinidos: boolean;

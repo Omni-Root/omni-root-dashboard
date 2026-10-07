@@ -1,4 +1,4 @@
-// Login social (Google, Facebook, GitHub) — OAuth 2.0 "authorization code",
+// Login social (Google, Microsoft, GitHub) — OAuth 2.0 "authorization code",
 // todo do lado do servidor: o segredo de cada app nunca vai ao navegador.
 //
 //   GET /api/auth/provedores        quais botões estão configurados (público)
@@ -11,15 +11,15 @@
 //   - só e-mail VERIFICADO pelo provedor conta;
 //   - o painel é privado: só entra quem estiver em OAUTH_PERMITIDOS (e-mails
 //     ou "@dominio.com"). Lista vazia = login social desligado. Sem isso,
-//     qualquer conta Google/Facebook/GitHub do mundo veria os dados;
+//     qualquer conta Google/Microsoft/GitHub do mundo veria os dados;
 //   - deu certo: a MESMA sessão (cookie assinado) do login do admin.
 // Precisa de internet (fala com o provedor); o login do admin funciona offline.
 import crypto from 'node:crypto';
 import express from 'express';
 import { assinar, createSessionToken, iguais, parseCookies, setSessionCookie } from '../auth.js';
 
-type NomeProvedor = 'google' | 'facebook' | 'github';
-interface Perfil {
+type NomeProvedor = 'google' | 'microsoft' | 'github';
+export interface Perfil {
   email: string | null;
   verificado: boolean;
 }
@@ -30,9 +30,18 @@ const TEMPO_LIMITE_MS = 10_000;
 
 const credenciais: Record<NomeProvedor, { id: string; segredo: string }> = {
   google: { id: process.env.GOOGLE_CLIENT_ID ?? '', segredo: process.env.GOOGLE_CLIENT_SECRET ?? '' },
-  facebook: { id: process.env.FACEBOOK_APP_ID ?? '', segredo: process.env.FACEBOOK_APP_SECRET ?? '' },
+  microsoft: { id: process.env.MICROSOFT_CLIENT_ID ?? '', segredo: process.env.MICROSOFT_CLIENT_SECRET ?? '' },
   github: { id: process.env.GITHUB_CLIENT_ID ?? '', segredo: process.env.GITHUB_CLIENT_SECRET ?? '' },
 };
+
+// Microsoft: "common" mostra a tela de login para contas pessoais e de
+// organização, mas só aceitamos as que têm e-mail confiável (ver perfil()).
+// Para aceitar contas de UMA organização (ex.: a da faculdade), coloque aqui
+// o ID dela (GUID do "locatário" no portal do Azure / Entra ID).
+const MICROSOFT_TENANT = process.env.MICROSOFT_TENANT?.trim() || 'common';
+// Locatário fixo de todas as contas pessoais da Microsoft (Outlook/Hotmail/Live).
+const TID_CONTAS_PESSOAIS = '9188040d-6c67-4c5b-b112-36a304b66dad';
+const ehGuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 // "ana@empresa.com, @fiap.com.br" -> e-mails exatos e domínios inteiros.
 const PERMITIDOS = (process.env.OAUTH_PERMITIDOS ?? '')
@@ -50,7 +59,7 @@ function permitido(email: string): boolean {
 }
 
 function ehProvedor(p: string): p is NomeProvedor {
-  return p === 'google' || p === 'facebook' || p === 'github';
+  return p === 'google' || p === 'microsoft' || p === 'github';
 }
 
 // Endereço de retorno registrado no provedor. Em dev, o Vite repassa o Host
@@ -91,14 +100,14 @@ function urlAutorizacao(p: NomeProvedor, redirect: string, estado: string): stri
       allow_signup: 'false',
     })}`;
   }
-  // Facebook sem versão no caminho: usa a versão mais antiga ainda ativa da
-  // API (uma versão fixa expira em ~2 anos e o login pararia de funcionar).
-  return `https://www.facebook.com/dialog/oauth?${q({
+  return `https://login.microsoftonline.com/${MICROSOFT_TENANT}/oauth2/v2.0/authorize?${q({
     client_id: id,
     redirect_uri: redirect,
     response_type: 'code',
-    scope: 'email,public_profile',
+    response_mode: 'query',
+    scope: 'openid email profile',
     state: estado,
+    prompt: 'select_account',
   })}`;
 }
 
@@ -128,14 +137,41 @@ async function perfil(p: NomeProvedor, code: string, redirect: string): Promise<
     const e = emails.find((x) => x.primary && x.verified) ?? emails.find((x) => x.verified);
     return { email: e?.email ?? null, verificado: Boolean(e) };
   }
-  const tok = await json<{ access_token: string }>(
-    `https://graph.facebook.com/oauth/access_token?${new URLSearchParams({ client_id: id, client_secret: segredo, redirect_uri: redirect, code })}`,
-  );
-  const u = await json<{ email?: string }>(
-    `https://graph.facebook.com/me?${new URLSearchParams({ fields: 'email', access_token: tok.access_token })}`,
-  );
-  // O Facebook só devolve e-mail já confirmado pela pessoa.
-  return { email: u.email ?? null, verificado: Boolean(u.email) };
+  // Microsoft: o id_token vem DIRETO do endpoint de token, por HTTPS, em troca
+  // do código — o OpenID Connect dispensa conferir a assinatura nesse caso
+  // (seção 3.1.3.7); conferimos o destinatário (aud).
+  const tok = await json<{ id_token?: string }>(`https://login.microsoftonline.com/${MICROSOFT_TENANT}/oauth2/v2.0/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: id, client_secret: segredo, code, redirect_uri: redirect, grant_type: 'authorization_code', scope: 'openid email profile' }),
+  });
+  if (!tok.id_token) throw new Error('Microsoft: sem id_token');
+  const c = JSON.parse(Buffer.from(tok.id_token.split('.')[1] ?? '', 'base64url').toString('utf8')) as {
+    aud?: string;
+    tid?: string;
+    email?: string;
+    preferred_username?: string;
+  };
+  return perfilMicrosoft(c, id, MICROSOFT_TENANT);
+}
+
+/**
+ * Decide se o e-mail de uma conta Microsoft é confiável (função pura: testada
+ * em tests/oauth-microsoft.test.ts). Conta pessoal: a Microsoft verifica o
+ * e-mail. Conta de organização: o e-mail é definido pelo admin DAQUELA
+ * organização — de uma organização qualquer, não prova nada (falha "nOAuth");
+ * só vale a organização configurada em MICROSOFT_TENANT.
+ */
+export function perfilMicrosoft(
+  c: { aud?: string; tid?: string; email?: string; preferred_username?: string },
+  clientId: string,
+  tenant: string,
+): Perfil {
+  if (c.aud !== clientId) throw new Error('Microsoft: id_token para outro app');
+  const pessoal = c.tid === TID_CONTAS_PESSOAIS;
+  const daOrganizacao = ehGuid(tenant) && c.tid?.toLowerCase() === tenant.toLowerCase();
+  const email = c.email ?? (daOrganizacao ? c.preferred_username : undefined) ?? null;
+  return { email, verificado: pessoal || daOrganizacao };
 }
 
 // ---- cookie de `state` (provedor.nonce.validade.assinatura) ----
@@ -174,7 +210,7 @@ export const rotasOAuth = express.Router();
 rotasOAuth.get('/api/auth/provedores', (_req, res) => {
   res.json({
     google: configurado('google'),
-    facebook: configurado('facebook'),
+    microsoft: configurado('microsoft'),
     github: configurado('github'),
     permitidosDefinidos: PERMITIDOS.length > 0,
   });

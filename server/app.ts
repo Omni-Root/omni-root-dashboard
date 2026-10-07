@@ -15,7 +15,7 @@ export function criarApp(): express.Express {
   app.use(express.json({ limit: '64kb' }));
 
   app.use(rotasSessao);
-  app.use(rotasOAuth); // login social (Google, Facebook, GitHub)
+  app.use(rotasOAuth); // login social (Google, Microsoft, GitHub)
   app.use(rotasPainel);
   app.use(rotasCamera);
   app.use(rotasExportacoes);
