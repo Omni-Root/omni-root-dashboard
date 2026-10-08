@@ -300,7 +300,7 @@ export default function Painel({ user, onLogout }: { user: string; onLogout: () 
               titulo="Mapa de qualidade"
               sub="Onde está a casca alta, a madeira torta e a rejeição — cada tora na posição da máquina no corte (GNSS), agrupada por zona. Funciona sem internet; o mapa de ruas é opcional."
             >
-              <MapaQualidade mapa={mapa} />
+              <MapaQualidade mapa={mapa} filters={filters} />
             </Secao>
 
             <Secao

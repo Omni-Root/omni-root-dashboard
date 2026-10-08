@@ -87,9 +87,10 @@ export default function Cabecalho({
           className="btn btn-menu"
           aria-expanded={menuAberto}
           aria-controls="header-controles"
+          aria-label="Menu"
           onClick={() => setMenuAberto((v) => !v)}
         >
-          <span aria-hidden="true">{menuAberto ? '✕' : '☰'}</span> Menu
+          <span aria-hidden="true">{menuAberto ? '✕' : '☰'}</span> <span className="btn-menu-texto">Menu</span>
         </button>
         <div id="header-controles" className={`header-controles${menuAberto ? ' aberto' : ''}`}>
           <VozMenu voz={voz} />

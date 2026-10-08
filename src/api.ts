@@ -6,7 +6,9 @@ import type {
   HeatmapCell,
   Maquina,
   Mapa,
+  PosicaoFrota,
   Qualidade,
+  Rastro,
   SummaryRow,
   TimeseriesPoint,
   UltimaInspecao,
@@ -141,6 +143,10 @@ export const api = {
   mapa: (f: Filters, signal?: AbortSignal) => fetchJson<Mapa>('/api/mapa', filterParams(f), signal),
   tendencia: (f: Filters, signal?: AbortSignal) =>
     fetchJson<AlertaTendencia[]>('/api/tendencia', { maquinaId: f.maquinaId }, signal),
+
+  // ---- frota: posição em tempo real + trajeto ----
+  frota: (signal?: AbortSignal) => fetchJson<PosicaoFrota[]>('/api/frota', {}, signal),
+  rastro: (f: Filters, signal?: AbortSignal) => fetchJson<Rastro>('/api/frota/rastro', filterParams(f), signal),
 
   // ---- câmera ao vivo ----
   camera: (signal?: AbortSignal) => fetchJson<CameraEstado>('/api/camera/maquinas', {}, signal),

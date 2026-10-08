@@ -276,6 +276,9 @@ tempo real; idempotente). Para ter dados, rode o `main.py` (ou o
 | `GET /api/events` | exige | — | Tempo real (SSE): aviso de tora nova/atualizada |
 | `POST /api/camera/frame` | `STREAM_TOKEN` | JPEG no corpo | Quadro da câmera ao vivo, empurrado pela máquina |
 | `GET /api/camera/maquinas` · `GET /api/camera/stream` | exige | `maquina` | Máquinas transmitindo / vídeo MJPEG |
+| `POST /api/maquinas/posicao` | `STREAM_TOKEN` | JSON: `maquina` (SN), `lat`, `lon`, precisão… | Posição atual da máquina, empurrada a cada 2 s (só em memória; repassada ao navegador pelo SSE) |
+| `GET /api/frota` | exige | — | Cada máquina pelo SN: posição ao vivo ou a última conhecida (trajeto/última tora), online/sem sinal |
+| `GET /api/frota/rastro` | exige | `from`, `to`, `maquinaId?` | Trajeto de cada máquina no período (`rastro_maquinas`, preenchida pelo sync — inclusive o trecho offline) |
 | `GET /api/export/csv` | exige | `from`, `to`, `maquinaId?` | Inspeções em CSV (streaming) |
 | `GET /api/export/pdf` | exige | `from`, `to`, `maquinaId?` | Relatório PDF (com mapa de ruas e "Onde agir") |
 | `GET /api/export/stanford` | exige | `from`, `to`, `maquinaId?` | ZIP com `.hpr` StanForD 2010 (posição em `UserDefinedData`) |

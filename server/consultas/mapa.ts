@@ -127,19 +127,28 @@ export function calcularAlertas(celulas: MapaCelula[]): Alerta[] {
 // ------------------------------------------------------------
 let _temPosicao = false;
 let _checadoEm = 0;
+// Consulta em andamento: requisições simultâneas (o painel pede mapa e
+// última inspeção juntos ao abrir) esperam ESTA resposta — antes, a segunda
+// via "checado há pouco" e respondia "sem colunas" por 30 s.
+let _checando: Promise<boolean> | null = null;
 
 export async function temColunasPosicao(): Promise<boolean> {
   if (_temPosicao) return true;
+  if (_checando) return _checando;
   if (Date.now() - _checadoEm < 30_000) return false;
   _checadoEm = Date.now();
-  const { rows } = await pool.query(
-    `SELECT COUNT(*)::int AS n FROM information_schema.columns
-     WHERE table_schema = current_schema()
-       AND table_name = 'toras_inspecionadas'
-       AND column_name IN ('pos_lat','pos_lon','pos_hdop','pos_satelites','pos_fonte','pos_idade_s','pos_precisao_m')`,
-  );
-  _temPosicao = (rows[0] as { n: number }).n === 7;
-  return _temPosicao;
+  _checando = pool
+    .query(
+      `SELECT COUNT(*)::int AS n FROM information_schema.columns
+       WHERE table_schema = current_schema()
+         AND table_name = 'toras_inspecionadas'
+         AND column_name IN ('pos_lat','pos_lon','pos_hdop','pos_satelites','pos_fonte','pos_idade_s','pos_precisao_m')`,
+    )
+    .then(({ rows }) => (_temPosicao = (rows[0] as { n: number }).n === 7))
+    .finally(() => {
+      _checando = null;
+    });
+  return _checando;
 }
 
 export interface MapaCelula {

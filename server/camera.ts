@@ -56,7 +56,12 @@ function headerStr(v: string | string[] | undefined): string {
 
 // Identificador da máquina = numero_serie (o maquina_id do config.json).
 // Restrito a caracteres inofensivos: entra em headers e em query string.
-const MAQUINA_RE = /^[A-Za-z0-9_.:\- ]{1,100}$/;
+export const MAQUINA_RE = /^[A-Za-z0-9_.:\- ]{1,100}$/;
+
+/** Token que a máquina envia (X-Stream-Token): o mesmo para câmera e posição (server/frota.ts). */
+export function tokenDaMaquinaValido(token: string): boolean {
+  return Boolean(TOKEN) && Boolean(token) && safeEqual(token, TOKEN);
+}
 
 function escreverParte(res: express.Response, q: Quadro): boolean {
   try {

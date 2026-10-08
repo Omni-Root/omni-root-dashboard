@@ -245,24 +245,51 @@ body {
 
 /* Computador: barra superior numa linha só — o subtítulo encurta (…) antes
    de os controles descerem; o texto auxiliar do "Ao vivo" sai em telas até
-   1500px (o estado "Ao vivo / Reconectando" fica sempre). */
+   1500px (o estado "Ao vivo / Reconectando" fica sempre). O título nunca
+   fica mais estreito que "Qualidade da" (no máximo 2 linhas): sem espaço
+   nem para isso — janela estreita, zoom ou texto ampliado —, os controles
+   descem para a linha de baixo em vez de esmagar o título até sumir. */
 @media (min-width: 1025px) {
   .app .header {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
   .app .header .header-title {
     flex: 1 1 0;
-    min-width: 0;
+    min-width: auto; /* = largura mínima do título (cabecalho.css zerava) */
+  }
+  .app .header h1 {
+    min-width: 7em;
   }
   .app .header .subtitle {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    contain: inline-size; /* o subtítulo encurta; não segura a largura do título */
   }
 }
 
 @media (max-width: 1500px) {
   .app .header .live-detail {
+    display: none;
+  }
+}
+
+/* Celular e tablet: mesma regra — o título nunca fica mais estreito que a
+   palavra mais longa; sem espaço ("Reconectando…" é mais largo que "Ao
+   vivo"), o selo, o sino e o Menu descem para a linha de baixo em vez de
+   cobrir o título. No celular o botão Menu fica só com o ☰. */
+@media (max-width: 1024px) {
+  .app .header {
+    flex-wrap: wrap;
+  }
+  .app .header .header-title {
+    flex: 1 1 0;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .app .header .btn-menu-texto {
     display: none;
   }
 }
@@ -282,6 +309,7 @@ body {
 .h-marca {
   display: none;
   color: var(--accent);
+  white-space: nowrap; /* "Omni-Root" não quebra no hífen */
 }
 
 @media (max-width: 1024px) {

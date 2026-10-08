@@ -6,6 +6,9 @@ import { useEffect, useRef, useState } from 'react';
 // reconecta sozinho se a conexão cair; `estado` mostra isso na interface.
 export type EstadoLive = 'conectando' | 'ao-vivo' | 'reconectando';
 
+export const EVENTO_POSICAO = 'omniroot:posicao';
+export const EVENTO_RASTRO = 'omniroot:rastro';
+
 export interface LiveInfo {
   estado: EstadoLive;
   ultimaEm: Date | null; // quando chegou a última tora
@@ -39,6 +42,17 @@ export function useLive(onNova: () => void, debounceMs = 800): LiveInfo {
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => cb.current(), debounceMs);
     });
+    // Frota (server/frota.ts): posição ao vivo de uma máquina e "trajeto novo
+    // no banco". Repassados como eventos da janela para o mapa (useFrota), sem
+    // abrir uma segunda conexão SSE.
+    es.addEventListener('posicao', (ev) => {
+      try {
+        window.dispatchEvent(new CustomEvent(EVENTO_POSICAO, { detail: JSON.parse((ev as MessageEvent).data) }));
+      } catch {
+        /* payload inválido: ignora */
+      }
+    });
+    es.addEventListener('rastro', () => window.dispatchEvent(new Event(EVENTO_RASTRO)));
     es.onopen = () => setInfo((i) => ({ ...i, estado: 'ao-vivo' }));
     es.onerror = () => setInfo((i) => ({ ...i, estado: 'reconectando' }));
 

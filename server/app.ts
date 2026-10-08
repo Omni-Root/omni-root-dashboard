@@ -8,6 +8,7 @@ import { rotasOAuth } from './rotas/oauth.js';
 import { rotasPainel } from './rotas/painel.js';
 import { rotasCamera } from './rotas/camera.js';
 import { rotasExportacoes } from './rotas/exportacoes.js';
+import { rotasFrota } from './rotas/frota.js';
 
 export function criarApp(): express.Express {
   const app = express();
@@ -18,6 +19,7 @@ export function criarApp(): express.Express {
   app.use(rotasOAuth); // login social (Google, Microsoft, GitHub)
   app.use(rotasPainel);
   app.use(rotasCamera);
+  app.use(rotasFrota); // posição das máquinas em tempo real + trajeto
   app.use(rotasExportacoes);
 
   // Em produção (`npm run build && npm start`) o Express também serve o cliente.
