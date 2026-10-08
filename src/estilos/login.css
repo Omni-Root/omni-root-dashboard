@@ -1,87 +1,377 @@
-/* ---- tela de login ---- */
-.login-screen {
-  position: relative;
+/* ---- tela de login (ver components/Login.tsx) ----
+   Cartão dividido: vitrine da marca à esquerda (curvas de nível de talhão
+   sobre o verde da faixa — no daltônico, grafite; segue os tokens), o
+   formulário à direita. No celular/tablet em pé, só o formulário. */
+.login-tela {
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 24px;
+  background:
+    radial-gradient(900px 500px at 15% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+    radial-gradient(700px 500px at 100% 100%, color-mix(in srgb, var(--jd-yellow) 8%, transparent), transparent 70%),
+    var(--page);
+}
+
+.login-cartao {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  width: min(1100px, 100%);
+  min-height: min(680px, calc(100vh - 48px));
+  padding: 12px;
+  background: var(--surface);
+  border-radius: 26px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 30px 80px -30px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- vitrine ---- */
+.login-vitrine {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 34px 36px 28px;
+  overflow: hidden;
+  color: var(--band-text);
+  background:
+    url('../assets/login-curvas.svg') center / cover no-repeat,
+    radial-gradient(360px 280px at 20% 105%, color-mix(in srgb, var(--jd-yellow) 26%, transparent), transparent 70%),
+    linear-gradient(155deg, color-mix(in srgb, var(--band) 75%, #000) 0%, var(--band) 55%, color-mix(in srgb, var(--band) 85%, #fff) 100%);
+  border-radius: 18px;
+}
+
+.lv-marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lv-marca img {
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
+}
+
+.lv-marca span {
+  font-size: calc(23px * var(--escala-texto));
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.lv-marca b {
+  font-weight: 800;
+  color: var(--jd-yellow);
+}
+
+.lv-mensagem h2 {
+  max-width: 16ch;
+  text-wrap: balance; /* linhas equilibradas: nada de uma palavra sozinha no fim */
+  margin: 0 0 14px;
+  font-size: calc(40px * var(--escala-texto));
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.lv-mensagem p {
+  max-width: 42ch;
+  margin: 0 0 22px;
+  color: var(--band-muted);
+  font-size: calc(15px * var(--escala-texto));
+  line-height: 1.55;
+}
+
+.lv-selos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lv-selos li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: calc(13px * var(--escala-texto));
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.lv-selos li::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--jd-yellow);
+}
+
+.lv-rodape {
+  margin: 0;
+  color: var(--band-muted);
+  font-size: calc(12px * var(--escala-texto));
+}
+
+/* ---- formulário ---- */
+.login-lado {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 48px 36px;
 }
 
 .login-theme {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 14px;
+  right: 14px;
 }
 
-.login-card {
-  width: 100%;
-  max-width: 340px;
+.login-conteudo {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 28px 24px;
+  gap: 14px;
+  width: 100%;
+  max-width: 380px;
 }
 
-.login-card {
-  border-top: 5px solid var(--jd-green);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+.login-logo-movel {
+  display: none;
 }
 
-.login-card h1 {
+.login-conteudo h1 {
   margin: 0;
-  font-size: calc(22px * var(--escala-texto));
-  color: var(--accent);
+  font-size: calc(30px * var(--escala-texto));
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
 .login-sub {
-  margin: 0 0 4px;
+  margin: -8px 0 6px;
   color: var(--text-muted);
-  font-size: calc(13px * var(--escala-texto));
+  font-size: calc(14px * var(--escala-texto));
 }
 
-.login-card label {
+.login-sociais {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.btn-social {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: var(--text-secondary);
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 11px 8px;
+  font: inherit;
+  font-size: calc(13px * var(--escala-texto));
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--axis);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-social span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-social svg {
+  flex: none;
+}
+
+.btn-social:hover:not(:disabled) {
+  background: var(--tint);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--axis));
+  transform: translateY(-1px);
+}
+
+.btn-social:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.login-dica {
+  margin: -4px 0 0;
+  color: var(--text-muted);
   font-size: calc(12px * var(--escala-texto));
 }
 
-.login-card input {
+.login-divisor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+  color: var(--text-muted);
+  font-size: calc(12px * var(--escala-texto));
+}
+
+.login-divisor::before,
+.login-divisor::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: calc(13px * var(--escala-texto));
+  font-weight: 600;
+}
+
+.login-form input {
+  width: 100%;
   font: inherit;
+  font-size: calc(15px * var(--escala-texto));
+  font-weight: 500;
   color: var(--text-primary);
   background: var(--page);
   border: 1px solid var(--axis);
-  border-radius: 6px;
-  padding: 8px 10px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.login-card button {
-  margin-top: 6px;
-  font: inherit;
-  font-weight: 600;
-  color: var(--accent-contrast);
-  background: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  padding: 9px 12px;
+.login-form input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.login-senha {
+  position: relative;
+  display: block;
+}
+
+.login-senha input {
+  padding-right: 46px;
+}
+
+.login-olho {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--text-muted);
+  background: none;
+  border: 0;
+  border-radius: 9px;
   cursor: pointer;
 }
 
-.login-card button:disabled {
+.login-olho:hover {
+  color: var(--text-primary);
+  background: var(--tint);
+}
+
+.login-entrar {
+  margin-top: 4px;
+  padding: 13px 14px;
+  font: inherit;
+  font-size: calc(15px * var(--escala-texto));
+  font-weight: 700;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 12px 22px -12px color-mix(in srgb, var(--accent) 90%, transparent);
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.15s ease;
+}
+
+.login-entrar:hover:not(:disabled) {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+.login-entrar:disabled {
   opacity: 0.55;
   cursor: default;
+  box-shadow: none;
+}
+
+.login-restrito {
+  margin: 2px 0 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: calc(12px * var(--escala-texto));
 }
 
 .login-error {
   background: color-mix(in srgb, var(--status-critical) 12%, transparent);
   border: 1px solid var(--status-critical);
-  color: var(--status-critical);
-  border-radius: 8px;
-  padding: 8px 10px;
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 10px 12px;
   font-size: calc(13px * var(--escala-texto));
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .btn-social,
+  .login-entrar,
+  .login-form input {
+    transition: none;
+  }
+}
+
+/* Tablet em pé e celular: só o formulário, com o brasão em cima. */
+@media (max-width: 900px) {
+  .login-tela {
+    padding: 16px;
+  }
+  .login-cartao {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding: 0;
+  }
+  .login-vitrine {
+    display: none;
+  }
+  .login-lado {
+    padding: 56px 22px 32px;
+  }
+  .login-logo-movel {
+    display: block;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 4px;
+  }
+}
+
+@media (max-width: 400px) {
+  .login-sociais {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

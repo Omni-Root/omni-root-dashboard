@@ -4,7 +4,7 @@ import { useSyncExternalStore, type ReactNode } from 'react';
 // conteúdo e deixa só o título, para tirar da tela o que não entra na
 // apresentação. Quais estão recolhidos fica no localStorage — arruma uma vez
 // antes da demo e continua assim. O atalho E expande tudo; pular para uma
-// seção pelo número (1–7) a expande.
+// seção pelo número (1–8) a expande.
 
 const STORAGE_KEY = 'omniroot-recolhidas';
 const ouvintes = new Set<() => void>();
@@ -37,6 +37,10 @@ export function definirRecolhida(id: string, recolher: boolean): void {
   if (recolher) novo.add(id);
   else novo.delete(id);
   gravar(novo);
+}
+
+export function estaRecolhida(id: string): boolean {
+  return recolhidas.has(id);
 }
 
 export function expandirTodas(): boolean {

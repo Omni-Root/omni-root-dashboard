@@ -71,6 +71,16 @@
   color: var(--text-muted);
 }
 
+/* Título do formato à esquerda, tecla de atalho à direita. */
+.export-item .export-item-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: inherit;
+  color: inherit;
+}
+
 .export-item:hover,
 .export-item:focus-visible {
   background: var(--tint-strong);

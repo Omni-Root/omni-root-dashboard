@@ -18,15 +18,26 @@ import {
   INK, JD_GREEN, JD_GREEN_DARK, JD_YELLOW, METRICA_TITULO, MUTED, NIVEL_COR, RULE, STATUS_COLOR, ZEBRA,
   ascii, conf, num, pct, tipoDadoLabel,
 } from './pdf-estilo.js';
-import { desenharMapaPdf, prepararVista } from './pdf-mapa.js';
+import { COR_ROTA, desenharMapaPdf, desenharPino, prepararVista, type FrotaPdf } from './pdf-mapa.js';
+import { getRastro, listarFrota } from '../frota.js';
+import { listMaquinas } from '../consultas/operacao.js';
 import type { Status } from '../validate.js';
 
 export async function streamPdf(f: Filters, res: express.Response): Promise<void> {
-  const [rep, qual, mapa] = await Promise.all([
+  const [rep, qual, mapa, rastro, frotaToda, maquinas] = await Promise.all([
     getPdfReport(f),
     getQualidade(f).catch(() => null),
     getMapa(f).catch(() => null),
+    getRastro(f).catch(() => null),
+    listarFrota().catch(() => []),
+    listMaquinas().catch(() => []),
   ]);
+  // Máquina (pino) e rota no mapa, como no painel — só a máquina filtrada, se houver filtro.
+  const snFiltro = f.maquinaId == null ? null : (maquinas.find((m) => m.id === f.maquinaId)?.numero_serie ?? '');
+  const frota: FrotaPdf = {
+    maquinas: frotaToda.filter((p) => p.lat !== null && p.lon !== null && (snFiltro === null || p.maquina === snFiltro)),
+    trajetos: rastro?.maquinas ?? [],
+  };
   const filename = `relatorio_${f.from}_a_${f.to}.pdf`;
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
@@ -230,17 +241,19 @@ export async function streamPdf(f: Filters, res: express.Response): Promise<void
     if (doc.y + 40 + blocoH * 3 > bottomLimit()) novaPagina();
     section(
       'Mapa de qualidade',
-      `Toras na posição da máquina no corte, agrupadas em zonas de ${mapa.celula_m} m; cada ponto é uma tora, ` +
-        `o anel verde é a mais recente. ${mapa.com_posicao} de ${mapa.total} toras do período com posição.`,
+      `Toras na posição da máquina no corte, agrupadas em zonas de ${mapa.celula_m} m; cada ponto é uma tora. ` +
+        `Zona pequena demais para a escala vira bolinha na cor do nível; as do "Onde agir" têm aro escuro e o nome. ` +
+        (frota.maquinas.length ? 'O pino vermelho é a máquina (SN) e a linha azul, a rota no período. ' : '') +
+        `${mapa.com_posicao} de ${mapa.total} toras do período com posição.`,
     );
-    const vista = await prepararVista(mapa, width, mapaH);
+    const vista = await prepararVista(mapa, width, mapaH, frota);
     const metricas: Metrica[] = ['casca', 'tort', 'falhas'];
     for (const m of metricas) {
       if (doc.y + blocoH > bottomLimit()) novaPagina();
       const topo = doc.y;
       const [ok, at] = LIMITES[m];
       doc.font('Helvetica-Bold').fontSize(9).fillColor(INK).text(METRICA_TITULO[m], left, topo, { width, lineBreak: false });
-      desenharMapaPdf(doc, mapa, vista, m, left, topo + 13, width, mapaH);
+      desenharMapaPdf(doc, mapa, vista, m, left, topo + 13, width, mapaH, frota);
       // Legenda: os limites que coloriram as zonas.
       const ly = topo + 13 + mapaH + 4;
       const faixas: [Nivel, string][] =
@@ -252,6 +265,19 @@ export async function streamPdf(f: Filters, res: express.Response): Promise<void
         doc.save().fillOpacity(nv === 'sem' ? 0.3 : 1).rect(lx, ly + 1, 7, 7).fill(NIVEL_COR[nv]).restore();
         doc.font('Helvetica').fontSize(7).fillColor(MUTED).text(rot, lx + 10, ly + 0.5, { lineBreak: false });
         lx += 10 + doc.widthOfString(rot) + 10;
+      }
+      // Símbolos: zona do "Onde agir", máquina e rota (só os que aparecem).
+      const legenda = (desenhar: () => void, rot: string) => {
+        desenhar();
+        doc.font('Helvetica').fontSize(7).fillColor(MUTED).text(rot, lx + 11, ly + 0.5, { lineBreak: false });
+        lx += 11 + doc.widthOfString(rot) + 10;
+      };
+      if (mapa.alertas.some((a) => a.metrica === m)) {
+        legenda(() => doc.save().lineWidth(1.4).circle(lx + 4, ly + 4.5, 3.4).fillAndStroke(NIVEL_COR.critico, INK).restore(), 'zona do Onde agir');
+      }
+      if (frota.maquinas.length) legenda(() => desenharPino(doc, lx + 4, ly + 9.5, 10), 'máquina (SN)');
+      if (frota.trajetos.length) {
+        legenda(() => doc.save().lineWidth(1.8).strokeColor(COR_ROTA).moveTo(lx, ly + 4.5).lineTo(lx + 8, ly + 4.5).stroke().restore(), 'rota');
       }
       doc.y = topo + blocoH;
     }

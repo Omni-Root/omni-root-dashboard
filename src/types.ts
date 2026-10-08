@@ -164,6 +164,37 @@ export interface MapaPonto {
   data: string;
 }
 
+// ---- Frota: posição das máquinas em tempo real + trajeto (server/frota.ts) ----
+export interface PosicaoFrota {
+  maquina: string; // SN (numero_serie)
+  modelo: string | null; // null = SN fora da tabela maquinas
+  online: boolean; // mandou posição nos últimos segundos
+  estado: string; // ok / sem_fix / sem_receptor / iniciando / offline
+  lat: number | null;
+  lon: number | null;
+  precisao_m: number | null;
+  hdop: number | null;
+  satelites: number | null;
+  fonte: string | null;
+  em: string | null; // hora local da posição mostrada
+  idadeMs: number | null;
+  contatoMs: number | null; // há quanto tempo a máquina mandou o último sinal (decide "online")
+  origem: 'ao_vivo' | 'trajeto' | 'tora' | null;
+}
+
+export interface TrajetoMaquina {
+  maquina: string;
+  segmentos: [number, number][][];
+  pontos: number;
+  inicio: string;
+  fim: string;
+}
+
+export interface Rastro {
+  disponivel: boolean;
+  maquinas: TrajetoMaquina[];
+}
+
 export interface Mapa {
   disponivel: boolean;
   aviso: string | null;

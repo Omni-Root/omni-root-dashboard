@@ -312,6 +312,157 @@
   }
 }
 
+/* ---- frota: máquinas (pelo SN) e trajeto ----
+   Máquina = pino vermelho e branco (como o do Maps), com a ponta na posição
+   e o SN ao lado; ao vivo, um "radar" pulsa no chão. As zonas são quadrados
+   translúcidos — o pino com rótulo não se confunde com elas. Sem sinal: o
+   mesmo pino mais apagado e o rótulo diz "sem sinal" (texto, não só cor).
+   A rota é azul (contínua = caminho registrado; tracejada = sem registro). */
+.frota-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin-bottom: 10px;
+  font-size: calc(12px * var(--escala-texto));
+}
+
+.frota-titulo {
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-right: 2px;
+}
+
+.frota-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--axis);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.frota-chip:hover:not(:disabled),
+.frota-chip:focus-visible {
+  background: var(--tint-strong);
+}
+
+.frota-chip:disabled {
+  cursor: default;
+}
+
+.frota-chip strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.frota-situacao {
+  color: var(--text-secondary);
+}
+
+/* Bolinha da lista "Frota" e da legenda: vermelha com miolo branco (o pino em miniatura). */
+.frota-ponto,
+.mapa-legenda .sw-maquina {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 28%, #e3191c 31%);
+  border: 2px solid #161a15;
+}
+
+.frota-offline .frota-ponto {
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+/* Marcador no mapa (L.divIcon 30x42): a PONTA do pino é a posição; o SN ao lado da cabeça. */
+.leaflet-marker-icon.frota-marcador {
+  background: none;
+  border: 0;
+}
+
+.frota-pino {
+  position: absolute;
+  inset: 0;
+}
+
+.frota-pino svg {
+  position: relative;
+  display: block;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.45));
+}
+
+/* Ao vivo: "radar" pulsando na ponta, no chão. */
+.frota-pulso {
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 22px;
+  height: 10px;
+  margin-left: -11px;
+  border-radius: 50%;
+  background: rgba(227, 25, 28, 0.35);
+  opacity: 0;
+}
+
+.frota-online .frota-pulso {
+  animation: frota-pulso 1.6s ease-out infinite;
+}
+
+/* Sem sinal: o mesmo pino, mais apagado, e o rótulo diz "sem sinal". */
+.frota-pino.frota-offline svg {
+  opacity: 0.72;
+}
+
+.frota-rotulo {
+  position: absolute;
+  left: 32px;
+  top: 4px;
+  white-space: nowrap;
+  font-family: var(--fonte-texto, inherit);
+  font-size: calc(12px * var(--escala-texto));
+  font-weight: 800;
+  color: #161a15;
+  background: #ffffff;
+  border: 2px solid #161a15;
+  border-radius: 6px;
+  padding: 1px 7px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.frota-offline + .frota-rotulo {
+  color: #4a4f48;
+  border-style: dashed;
+}
+
+@keyframes frota-pulso {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+/* Botão "Rota" (liga/desliga a linha do trajeto) nas opções do mapa. */
+.mapa-opcoes .btn-rota[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frota-online .frota-pulso {
+    animation: none;
+  }
+}
+
 /* Pular para uma seção (#mapa etc.) não pode esconder o título atrás do
    alerta fixo no topo. No celular o alerta não é fixo (ver abaixo). */
 .panel,

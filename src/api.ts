@@ -6,7 +6,9 @@ import type {
   HeatmapCell,
   Maquina,
   Mapa,
+  PosicaoFrota,
   Qualidade,
+  Rastro,
   SummaryRow,
   TimeseriesPoint,
   UltimaInspecao,
@@ -73,6 +75,14 @@ export interface MeResponse {
   user?: string;
 }
 
+export interface ProvedoresLogin {
+  google: boolean;
+  microsoft: boolean;
+  github: boolean;
+  /** OAUTH_PERMITIDOS tem alguém? Sem isso, o login social fica desligado. */
+  permitidosDefinidos: boolean;
+}
+
 export const api = {
   // ---- saúde do servidor/banco (pública) ----
   health: async (): Promise<boolean> => {
@@ -105,6 +115,12 @@ export const api = {
   logout: async (): Promise<void> => {
     await fetch('/api/logout', { method: 'POST' });
   },
+  /** Quais logins sociais o servidor tem configurados (sem segredo nenhum: só sim/não). */
+  provedores: async (): Promise<ProvedoresLogin> => {
+    const res = await fetch('/api/auth/provedores', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Falha ao consultar provedores (${res.status})`);
+    return res.json() as Promise<ProvedoresLogin>;
+  },
 
   // ---- dados ----
   maquinas: (signal?: AbortSignal) => fetchJson<Maquina[]>('/api/maquinas', {}, signal),
@@ -127,6 +143,10 @@ export const api = {
   mapa: (f: Filters, signal?: AbortSignal) => fetchJson<Mapa>('/api/mapa', filterParams(f), signal),
   tendencia: (f: Filters, signal?: AbortSignal) =>
     fetchJson<AlertaTendencia[]>('/api/tendencia', { maquinaId: f.maquinaId }, signal),
+
+  // ---- frota: posição em tempo real + trajeto ----
+  frota: (signal?: AbortSignal) => fetchJson<PosicaoFrota[]>('/api/frota', {}, signal),
+  rastro: (f: Filters, signal?: AbortSignal) => fetchJson<Rastro>('/api/frota/rastro', filterParams(f), signal),
 
   // ---- câmera ao vivo ----
   camera: (signal?: AbortSignal) => fetchJson<CameraEstado>('/api/camera/maquinas', {}, signal),

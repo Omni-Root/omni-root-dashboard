@@ -102,26 +102,39 @@
   outline-offset: 2px;
 }
 
-/* ---- destaque ao pular para uma seção (teclas 1–7) ---- */
+/* ---- destaque ao pular para uma seção (teclas 1–8) ---- */
+/* O contorno fica numa camada própria (::after), não no painel: o painel
+   já tem a animação de entrada da página (identidade.css) e trocar a
+   `animation` dele faria a entrada se repetir a cada atalho. Contorno por
+   dentro (inset): o destaque da última inspeção corta o que vaza. */
 @keyframes destaque-atalho {
   0%,
   60% {
-    box-shadow: 0 0 0 3px var(--jd-yellow);
+    box-shadow: inset 0 0 0 3px var(--jd-yellow);
   }
   100% {
-    box-shadow: 0 0 0 3px transparent;
+    box-shadow: inset 0 0 0 3px transparent;
   }
 }
 
 .destaque-atalho {
-  border-radius: 10px;
-  animation: destaque-atalho 1.5s ease-out;
+  position: relative;
+}
+
+.destaque-atalho::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: destaque-atalho 1.5s ease-out forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .destaque-atalho {
+  .destaque-atalho::after {
     animation: none;
-    box-shadow: 0 0 0 3px var(--jd-yellow);
+    box-shadow: inset 0 0 0 3px var(--jd-yellow);
   }
   .btn-recolher span {
     transition: none;
@@ -251,4 +264,30 @@ kbd {
   .aviso-atalho {
     bottom: 84px;
   }
+}
+
+/* ---- texto ampliado (A+) e modo dislexia em tela estreita ----
+   Com o texto em 150-175% ou a fonte larga da dislexia, controles que
+   cabiam numa linha passavam da largura do celular: encolhem ou quebram
+   de linha em vez de vazar. */
+.filters label {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.filters select,
+.filters input {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.panel-opcoes,
+.cards-head,
+.filters .presets {
+  flex-wrap: wrap;
+}
+
+.mapa-metricas .seg {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }

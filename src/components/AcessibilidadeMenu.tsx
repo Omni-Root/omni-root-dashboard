@@ -14,6 +14,12 @@ const OPCOES: { modo: Modo; titulo: string; descricao: string; tecla: string }[]
     descricao: 'Fonte OpenDyslexic, mais espaço entre letras e linhas',
     tecla: 'D',
   },
+  {
+    modo: 'contraste',
+    titulo: 'Alto contraste',
+    descricao: 'Preto e branco puros, bordas fortes: projetor e baixa visão',
+    tecla: 'X',
+  },
 ];
 
 function Opcao({ o }: { o: (typeof OPCOES)[number] }) {
@@ -37,15 +43,16 @@ function Opcao({ o }: { o: (typeof OPCOES)[number] }) {
   );
 }
 
-// "Acessibilidade ▾" no cabeçalho: os dois modos como chaves liga/desliga.
-// O menu fica aberto ao alternar (dá para ligar os dois e ver o efeito);
+// "Acessibilidade ▾" no cabeçalho: os três modos como chaves liga/desliga.
+// O menu fica aberto ao alternar (dá para ligar vários e ver o efeito);
 // fecha com clique fora ou Esc. Um ponto no botão avisa que há modo ligado.
 export default function AcessibilidadeMenu() {
   const [open, setOpen] = useState(false);
   const raiz = useRef<HTMLDivElement>(null);
   const daltonico = useModo('daltonico');
   const dislexia = useModo('dislexia');
-  const algumLigado = daltonico || dislexia;
+  const contraste = useModo('contraste');
+  const algumLigado = daltonico || dislexia || contraste;
 
   useEffect(() => {
     if (!open) return;
@@ -71,7 +78,7 @@ export default function AcessibilidadeMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        title="Cores para daltônicos (tecla C) e leitura para dislexia (tecla D)"
+        title="Cores para daltônicos (C), leitura para dislexia (D) e alto contraste (X)"
       >
         Acessibilidade
         {algumLigado && <span className="acess-ponto" aria-label="(modo ligado)" />}

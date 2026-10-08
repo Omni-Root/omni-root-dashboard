@@ -17,6 +17,10 @@ import type express from 'express';
 import { pool } from './db.js';
 
 const CANAL = 'omniroot_toras';
+// Trajeto das máquinas: um aviso por lote que o sync insere (trigger em
+// rastro_maquinas). A posição AO VIVO não passa pelo banco: chega por POST
+// da máquina e sai daqui direto (server/frota.ts, evento SSE 'posicao').
+const CANAL_RASTRO = 'omniroot_rastro';
 const POLL_MS = Number(process.env.LIVE_POLL_MS ?? 5000);
 const HEARTBEAT_MS = 20_000;
 
@@ -28,7 +32,8 @@ const clientes = new Set<Cliente>();
 let ultimoIdAnunciado = 0;
 let listenAtivo = false;
 
-function transmitir(evento: string, dados: unknown): void {
+/** Manda um evento a todos os navegadores conectados (também usado pela frota: server/frota.ts). */
+export function transmitir(evento: string, dados: unknown): void {
   const payload = `event: ${evento}\ndata: ${JSON.stringify(dados)}\n\n`;
   for (const c of clientes) {
     try {
@@ -88,6 +93,12 @@ async function iniciarListen(): Promise<void> {
   });
 
   cliente.on('notification', (msg) => {
+    // Trajeto: o sync inseriu um lote em rastro_maquinas (inclusive o trecho
+    // feito sem internet) — o navegador recarrega a linha do trajeto.
+    if (msg.channel === CANAL_RASTRO) {
+      transmitir('rastro', { em: new Date().toISOString() });
+      return;
+    }
     if (msg.channel !== CANAL) return;
     let dados: Record<string, unknown> = {};
     try {
@@ -110,6 +121,7 @@ async function iniciarListen(): Promise<void> {
   try {
     await cliente.connect();
     await cliente.query(`LISTEN ${CANAL}`);
+    await cliente.query(`LISTEN ${CANAL_RASTRO}`);
     listenAtivo = true;
     console.log(`[live] LISTEN ${CANAL} ativo (push do Postgres)`);
   } catch (err) {

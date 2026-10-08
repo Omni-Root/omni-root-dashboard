@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
 import type { CameraEstado, Maquina, Status } from '../types';
 import { STATUS_META } from '../types';
+import Icone from './Icone';
 
 // Painel "Câmera ao vivo": o que o operador está vendo na garra, com as
 // caixas e o HUD que o main.py desenha, empurrado para o servidor a poucos
@@ -15,9 +16,24 @@ import { STATUS_META } from '../types';
 //     fingindo ser ao vivo;
 //   - o filtro de máquina do topo manda: se ele está preenchido, mostra a
 //     câmera daquela máquina; senão, a primeira que estiver transmitindo,
-//     com um seletor caso haja mais de uma.
+//     com um seletor caso haja mais de uma;
+//   - tela cheia (botão no canto do quadro ou tecla V): o painel inteiro —
+//     selo "Ao vivo", imagem e classificação — ocupa a tela, para a banca
+//     ver de longe a tora sendo inspecionada.
 
 const POLL_MS = 2000;
+
+// Tecla V do painel: liga/desliga a tela cheia da câmera. Devolve false se
+// não há câmera na tela (nenhuma máquina transmitindo ou painel recolhido).
+const EVENTO_TELA_CHEIA = 'omniroot:camera-tela-cheia';
+export function alternarCameraTelaCheia(): boolean {
+  return !window.dispatchEvent(new Event(EVENTO_TELA_CHEIA, { cancelable: true }));
+}
+
+function alternarTelaCheia(el: HTMLElement): void {
+  if (document.fullscreenElement === el) void document.exitFullscreen().catch(() => undefined);
+  else void el.requestFullscreen?.().catch(() => undefined);
+}
 
 function haQuanto(ms: number): string {
   const s = Math.max(0, Math.round(ms / 1000));
@@ -90,6 +106,26 @@ export default function CameraAoVivo({
     antesOnline.current = online;
   }, [online]);
 
+  // Tela cheia: `caixa` só existe quando há câmera para mostrar.
+  const caixa = useRef<HTMLDivElement>(null);
+  const [cheia, setCheia] = useState(false);
+  useEffect(() => {
+    const aoMudar = () => setCheia(caixa.current !== null && document.fullscreenElement === caixa.current);
+    const aoPedir = (e: Event) => {
+      if (!caixa.current) return;
+      e.preventDefault(); // avisa alternarCameraTelaCheia() que havia câmera
+      alternarTelaCheia(caixa.current);
+    };
+    document.addEventListener('fullscreenchange', aoMudar);
+    window.addEventListener(EVENTO_TELA_CHEIA, aoPedir);
+    return () => {
+      document.removeEventListener('fullscreenchange', aoMudar);
+      window.removeEventListener(EVENTO_TELA_CHEIA, aoPedir);
+    };
+  }, []);
+  // iPhone não deixa pôr um elemento qualquer em tela cheia: lá o botão some.
+  const podeTelaCheia = document.fullscreenEnabled;
+
   if (estado && !estado.dados.ligada) {
     return (
       <div className="empty camera-empty">
@@ -112,7 +148,7 @@ export default function CameraAoVivo({
   const statusMeta = cam.status && cam.status in STATUS_META ? STATUS_META[cam.status as Status] : null;
 
   return (
-    <div className={`camera ${online ? 'camera-online' : 'camera-offline'}`}>
+    <div ref={caixa} className={`camera ${online ? 'camera-online' : 'camera-offline'}`}>
       <div className="camera-head">
         <span className={`live-badge ${online ? 'live-ao-vivo' : 'live-reconectando'}`} aria-live="polite">
           <span className="live-dot" aria-hidden="true" />
@@ -144,6 +180,17 @@ export default function CameraAoVivo({
             <strong>Sem sinal</strong>
             <span>Máquina sem rede ou inspeção parada — a coleta continua no SQLite local e sincroniza quando voltar.</span>
           </div>
+        )}
+        {podeTelaCheia && (
+          <button
+            type="button"
+            className="camera-tela-cheia"
+            onClick={() => caixa.current && alternarTelaCheia(caixa.current)}
+            aria-label={cheia ? 'Sair da tela cheia da câmera' : 'Câmera em tela cheia'}
+            title={cheia ? 'Sair da tela cheia (tecla V ou Esc)' : 'Câmera em tela cheia (tecla V)'}
+          >
+            <Icone nome={cheia ? 'reduzir' : 'expandir'} />
+          </button>
         )}
       </div>
 

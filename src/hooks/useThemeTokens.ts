@@ -48,11 +48,12 @@ export function useThemeTokens(): ThemeTokens {
     //    <html>, então observamos esse atributo. Sem isto, as cores dos
     //    gráficos (que o Recharts recebe como atributo SVG, onde var(--x) não
     //    resolve) ficariam congeladas no tema anterior.
-    //    O modo daltônico (data-cores) troca as cores de status: mesma razão.
+    //    Os modos daltônico (data-cores) e alto contraste (data-contraste)
+    //    trocam cores: mesma razão.
     const observador = new MutationObserver(reler);
     observador.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['data-theme', 'data-cores'],
+      attributeFilter: ['data-theme', 'data-cores', 'data-contraste'],
     });
 
     return () => {
